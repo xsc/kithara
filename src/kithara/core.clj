@@ -46,16 +46,17 @@
 ;; ## Consumer Callback
 
 (defn- prepare-callback
-  [consumer-tag {:keys [auto-ack? on-error]} callback]
-  (fn [message]
-    (try
-      (callback message)
-      (catch Throwable t
-        (log/errorf t "uncaught exception in consumer [%s]." consumer-tag)
-        (when-not auto-ack?
-          (if on-error
-            (on-error message t)
-            (rmq/nack message)))))))
+  [{:keys [consumer-tag consumer-opts queue-opts] } callback]
+  (let [{:keys [auto-ack? on-error]} consumer-opts]
+    (fn [message]
+      (try
+        (callback message)
+        (catch Throwable t
+          (log/errorf t "uncaught exception in consumer [%s]." consumer-tag)
+          (when-not auto-ack?
+            (if on-error
+              (on-error message t)
+              (rmq/nack message))))))))
 
 ;; ## Component
 
@@ -64,6 +65,7 @@
                         queue-opts
                         consumer-opts
                         callback]
+  :this/as         *this*
   :connection-opts (merge default-connection-opts connection-opts)
   :connection      (rmq/connect connection-opts) #(rmq/disconnect %)
   :channel-opts    (merge default-channel-opts consumer-opts)
@@ -71,7 +73,7 @@
   :queue-opts      (merge default-queue-opts queue-opts)
   :queue           (prepare-queue channel queue-opts)
   :consumer-tag    (prepare-consumer-tag id)
-  :callback'       (prepare-callback consumer-tag consumer-opts callback)
+  :callback'       (prepare-callback *this* callback)
   :consumer        (log/debugf "starting consumer [%s] ..." consumer-tag)
   :consumer
   (->> {:consumer-tag consumer-tag}
