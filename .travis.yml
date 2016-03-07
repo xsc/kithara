@@ -1,0 +1,9 @@
+language: clojure
+services:
+  - rabbitmq
+env:
+  - RABBITMQ_HOST=127.0.0.1 RABBITMQ_PORT=5672
+jdk:
+  - openjdk7
+  - oraclejdk7
+  - oraclejdk8
