@@ -6,6 +6,7 @@
             :year 2016
             :key "mit"}
   :dependencies [[org.clojure/clojure "1.8.0"]
+                 [org.clojure/tools.logging "0.3.1"]
                  [net.jodah/lyra "0.5.2"]
                  [com.rabbitmq/amqp-client "3.6.1" :scope "provided"]
                  [peripheral "0.4.7"]]
