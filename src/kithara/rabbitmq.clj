@@ -272,7 +272,9 @@
 (defn consume
   ([{:keys [^Channel channel queue-name] :as queue} callback]
    (let [opts (read-consumer-opts queue {})]
-     (.basicConsume channel queue-name (build-consumer opts callback))))
+     {:channel      channel
+      :consumer-tag (->> (build-consumer opts callback)
+                         (.basicConsume channel queue-name))}))
   ([queue callback
     & [{:keys [as auto-ack? consumer-tag local? exclusive? arguments]
         :or {auto-ack?  false
@@ -282,4 +284,9 @@
         :as opts}]]
    (let [opts      (read-consumer-opts queue opts)
          consumer  (build-consumer opts callback)]
-     (basic-consume queue opts consumer))))
+     {:channel      (:channel queue)
+      :consumer-tag (basic-consume queue opts consumer)})))
+
+(defn cancel
+  [{:keys [^Channel channel consumer-tag]}]
+  (.basicCancel channel (str consumer-tag)))
