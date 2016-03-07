@@ -58,6 +58,14 @@
               (on-error message t)
               (rmq/nack message))))))))
 
+;; ## Infrastructure
+
+(defn- prepare-infrastructure
+  [{:keys [consumer-opts] :as consumer}]
+  (if-let [infrastructure (:infrastructure consumer-opts)]
+    {}
+    {}))
+
 ;; ## Component
 
 (defcomponent Consumer [id
@@ -66,15 +74,21 @@
                         consumer-opts
                         callback]
   :this/as         *this*
+  :consumer-tag    (prepare-consumer-tag id)
+
   :connection-opts (merge default-connection-opts connection-opts)
   :connection      (rmq/connect connection-opts) #(rmq/disconnect %)
+
   :channel-opts    (merge default-channel-opts consumer-opts)
   :channel         (rmq/open connection channel-opts) #(rmq/close %)
+
+  :component/infra (prepare-infrastructure *this*)
+
   :queue-opts      (merge default-queue-opts queue-opts)
   :queue           (prepare-queue channel queue-opts)
-  :consumer-tag    (prepare-consumer-tag id)
-  :callback'       (prepare-callback *this* callback)
-  :consumer        (log/debugf "starting consumer [%s] ..." consumer-tag)
+
+  :callback'
+  (prepare-callback *this* callback)
   :consumer
   (->> {:consumer-tag consumer-tag}
        (merge consumer-opts)
