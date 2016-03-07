@@ -1,10 +1,8 @@
 # kithara
 
 __kithara__ is a (limited) [RabbitMQ][rabbitmq] client for Clojure, based on
-[Lyra][lyra].
-
- Its specific scope - and thus source of its limitations - is the simple
-creation of RabbitMQ-based consumers with appropriate recovery and retry
+[Lyra][lyra]. Its specific scope - and thus source of its limitations - is the
+simple creation of RabbitMQ-based consumers with appropriate recovery and retry
 facilities.
 
 If you're looking for a more complete RabbitMQ library you should definitely
