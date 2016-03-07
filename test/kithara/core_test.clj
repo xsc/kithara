@@ -1,6 +1,6 @@
 (ns kithara.core-test
   (:require [clojure.test :refer :all]
-            [kithara.core :refer :all]
+            [kithara.core :as kithara]
             [kithara.rabbitmq :as rmq]
             [peripheral.core :as p]))
 
@@ -57,7 +57,7 @@
 
 (defn make-consumer
   [consumer]
-  (create
+  (kithara/consumer
     {:consumer-id "kithara"
      :connection  connection
      :queue       {:queue-name  queue-name

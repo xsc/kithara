@@ -46,89 +46,55 @@
 ;; ## Consumer Callback
 
 (defn- prepare-callback
-  [consumer-tag {:keys [auto-ack?]} callback]
+  [consumer-tag {:keys [auto-ack? on-error]} callback]
   (fn [message]
     (try
       (callback message)
       (catch Throwable t
         (log/errorf t "uncaught exception in consumer [%s]." consumer-tag)
         (when-not auto-ack?
-          (rmq/nack message))))))
+          (if on-error
+            (on-error message t)
+            (rmq/nack message)))))))
 
 ;; ## Component
 
-(defcomponent ConnectedConsumer [connection
-                                 id
-                                 queue-opts
-                                 consumer-opts
-                                 callback]
-  :channel-opts (merge default-channel-opts consumer-opts)
-  :channel      (rmq/open connection channel-opts) #(rmq/close %)
-  :queue-opts   (merge default-queue-opts queue-opts)
-  :queue        (prepare-queue channel queue-opts)
-  :consumer-tag (prepare-consumer-tag id)
-  :callback'    (prepare-callback consumer-tag consumer-opts callback)
-  :consumer     (log/debugf "starting consumer [%s] ..." consumer-tag)
-  :consumer
-  (->> {:consumer-tag consumer-tag}
-       (merge consumer-opts)
-       (rmq/consume queue callback')))
-
 (defcomponent Consumer [id
-                        consumer-opts
                         connection-opts
                         queue-opts
+                        consumer-opts
                         callback]
   :connection-opts (merge default-connection-opts connection-opts)
   :connection      (rmq/connect connection-opts) #(rmq/disconnect %)
-  :component/consumer
-  (map->ConnectedConsumer
-    {:connection    connection
-     :consumer-opts consumer-opts
-     :id            id
-     :queue-opts    queue-opts
-     :callback      callback})
-  :channel (:channel consumer))
+  :channel-opts    (merge default-channel-opts consumer-opts)
+  :channel         (rmq/open connection channel-opts) #(rmq/close %)
+  :queue-opts      (merge default-queue-opts queue-opts)
+  :queue           (prepare-queue channel queue-opts)
+  :consumer-tag    (prepare-consumer-tag id)
+  :callback'       (prepare-callback consumer-tag consumer-opts callback)
+  :consumer        (log/debugf "starting consumer [%s] ..." consumer-tag)
+  :consumer
+  (->> {:consumer-tag consumer-tag}
+       (merge consumer-opts)
+       (rmq/consume queue callback'))
+  #(rmq/cancel %))
 
 ;; ## Constructor
 
-(defn- connection-instance?
-  [connection]
-  (or (nil? connection)
-      (instance? com.rabbitmq.client.Connection connection)))
-
-(defn create
+(defn consumer
   [{:keys [consumer-id
            connection
            channel
            queue
            consumer]}]
-  {:pre [(or (map? connection) (connection-instance? connection))
+  {:pre [(map? connection)
          (or (not (:declare? queue)) (string? (:exchange queue)))
          (string? consumer-id)
          (or (seq (:routing-keys queue)) (:routing-key queue))
          (:callback consumer)]}
-  (let [base {:queue-opts    queue
-              :consumer-opts consumer
-              :id            consumer-id
-              :callback      (:callback consumer)}]
-    (if (connection-instance? connection)
-      (map->ConnectedConsumer
-        (merge
-          {:connection connection}
-          base))
-      (map->Consumer
-        (merge
-          {:connection-opts connection}
-          base)))))
-
-;; ## Specialized Constructors
-
-(defn create-persistent
-  [{:keys [queue] :as opts}]
-  {:pre [(string? (:queue-name queue))]}
-  (-> opts
-      (update :queue merge {:exclusive?   false
-                            :auto-delete? false
-                            :durable?     true})
-      (create)))
+  (map->Consumer
+    {:connection-opts connection
+     :queue-opts    queue
+     :consumer-opts consumer
+     :id            consumer-id
+     :callback      (:callback consumer)}))
