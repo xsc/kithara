@@ -1,7 +1,11 @@
 (ns kithara.core-test
   (:require [clojure.test :refer :all]
+            [kithara.rabbitmq
+             [connection :as c]
+             [channel :as ch]
+             [message :as message]
+             [publish :refer [publish]]]
             [kithara.core :as kithara]
-            [kithara.rabbitmq :as rmq]
             [peripheral.core :as p]))
 
 ;; ## Connection Data
@@ -48,31 +52,32 @@
   :once
   (fn [f]
     (with-close
-      [conn     (rmq/connect connection)   rmq/disconnect
-       channel  (rmq/open conn)            rmq/close
+      [conn     (c/open connection)        c/close
+       channel  (ch/open conn)             ch/close
        exchange (declare-exchange channel) delete-exchange]
       (f))))
 
 ;; ## Tests
 
 (defn make-consumer
-  [consumer]
-  (kithara/consumer
-    {:consumer-id "kithara"
-     :connection  connection
-     :queue       {:queue-name  queue-name
-                   :exchange    exchange-name
-                   :routing-key "#"}
-     :consumer    consumer}))
+  [handler]
+  (-> handler
+      (kithara/consumer {:consumer-name "kithara"})
+      (kithara/with-queue
+        queue-name
+        {:exchange     exchange-name
+         :routing-keys ["#"]})
+      (kithara/with-channel {})
+      (kithara/with-connection connection)))
 
 (defn- publish!
   [consumer routing-key & [properties]]
-  (rmq/publish
-    (:channel consumer)
-    {:exchange exchange-name
+  (publish
+    consumer
+    {:exchange    exchange-name
      :routing-key routing-key
-     :properties properties
-     :body (.getBytes routing-key "UTF-8")}))
+     :properties  properties
+     :body        (.getBytes routing-key "UTF-8")}))
 
 (deftest t-default-consumer
   (testing "consumer with default behaviour."
@@ -81,22 +86,22 @@
           renack<? (promise)
           reject<? (promise)
           error<?  (promise)
-          callback
+          handler
           (fn [{:keys [routing-key redelivered?] :as message}]
             (case [routing-key redelivered?]
               ["reject" false]
-              (do (deliver reject<? true) (rmq/reject message))
+              (do (deliver reject<? true) {:reject? true})
               ["ack" false]
-              (do (deliver ack<? true) (rmq/ack message))
+              (do (deliver ack<? true) {:ack? true})
               ["nack" false]
-              (do (deliver nack<? true) (rmq/nack message))
+              (do (deliver nack<? true) {:nack? true})
               ["nack" true]
-              (do (deliver renack<? true) (rmq/ack message))
+              (do (deliver renack<? true) {:ack? true})
               ["error" false]
               (throw (Exception.))
               ["error" true]
-              (do (deliver error<? true) (rmq/ack message))))]
-      (p/with-start [consumer (is (make-consumer {:callback callback}))]
+              (do (deliver error<? true) {:ack? true})))]
+      (p/with-start [consumer (is (make-consumer handler))]
         (testing "ack."
           (is (nil? (publish! consumer "ack")))
           (is (deref ack<? 500 nil)))
