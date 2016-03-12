@@ -1,4 +1,4 @@
-(ns kithara.connection
+(ns kithara.connections
   (:require [kithara.rabbitmq
              [connection :as connection]
              [channel :as channel]
@@ -9,22 +9,15 @@
 ;; ## Component
 
 (defn- make-consumers
-  [{:keys [consumers connection channel]}]
+  [{:keys [consumers connection]}]
   (map
-    #(-> %
-         (i/set-connection connection)
-         (i/set-channel channel))
+    #(i/set-connection % connection)
     consumers))
 
 (defcomponent ConnectedConsumer [consumers]
   :this/as            *this*
   :connection         (connection/open *this*) #(connection/close %)
-  :channel            (channel/open connection) #(channel/close %)
-  :components/running (make-consumers *this*)
-
-  publisher/Publisher
-  (publish [_ message]
-    (publisher/publish channel message)))
+  :components/running (make-consumers *this*))
 
 ;; ## Wrapper
 

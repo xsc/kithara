@@ -73,7 +73,7 @@
 (defn- publish!
   [consumer routing-key & [properties]]
   (publish
-    consumer
+    (-> consumer :running first :channel)
     {:exchange    exchange-name
      :routing-key routing-key
      :properties  properties
