@@ -5,8 +5,8 @@ __kithara__ is a (limited) [RabbitMQ][rabbitmq] client for Clojure, based on
 simple creation of RabbitMQ-based consumers with appropriate recovery and retry
 facilities.
 
-If you're looking for a more complete RabbitMQ library you should definitely
-check out [langohr][langohr].
+If you're looking for a more complete RabbitMQ library you should check out
+[langohr][langohr].
 
 [rabbitmq]: https://www.rabbitmq.com
 [lyra]: https://github.com/jhalterman/lyra
