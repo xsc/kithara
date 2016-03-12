@@ -3,13 +3,18 @@
              [connection :as connection]
              [channel :as channel]
              [publish :as publisher]]
+            [kithara.infrastructure :as i]
             [peripheral.core :refer [defcomponent]]))
 
 ;; ## Component
 
 (defn- make-consumers
   [{:keys [consumers connection channel]}]
-  (map #(assoc % :connection connection, :channel channel) consumers))
+  (map
+    #(-> %
+         (i/set-connection connection)
+         (i/set-channel channel))
+    consumers))
 
 (defcomponent ConnectedConsumer [consumers]
   :this/as            *this*

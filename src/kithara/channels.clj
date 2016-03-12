@@ -1,12 +1,13 @@
 (ns kithara.channels
   (:require [kithara.rabbitmq.channel :as channel]
+            [kithara.infrastructure :as i]
             [peripheral.core :refer [defcomponent]]))
 
 ;; ## Component
 
 (defn- make-consumers
   [{:keys [consumers channel]}]
-  (map #(assoc % :channel channel) consumers))
+  (map #(i/set-channel % channel) consumers))
 
 (defcomponent ChannelConsumer [consumers
                                connection
@@ -17,7 +18,11 @@
   :assert/connection? (some? connection)
   :this/as            *this*
   :channel            (channel/open connection *this*) #(channel/close %)
-  :components/running (make-consumers *this*))
+  :components/running (make-consumers *this*)
+
+  i/HasConnection
+  (set-connection [this connection]
+    (assoc this :connection connection)))
 
 ;; ## Wrapper
 

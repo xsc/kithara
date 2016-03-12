@@ -1,5 +1,6 @@
 (ns kithara.queues
   (:require [kithara.rabbitmq.queue :as queue]
+            [kithara.infrastructure :as i]
             [peripheral.core :refer [defcomponent]]))
 
 ;; ## Logic
@@ -26,7 +27,7 @@
 
 (defn- make-consumers
   [{:keys [consumers queue]}]
-  (map #(assoc % :queue queue) consumers))
+  (map #(i/set-queue % queue) consumers))
 
 ;; ## Component
 
@@ -45,7 +46,11 @@
   :assert/name?       (string? queue-name)
   :this/as            *this*
   :queue              (make-queue *this*)
-  :components/running (make-consumers *this*))
+  :components/running (make-consumers *this*)
+
+  i/HasChannel
+  (set-channel [this channel]
+    (assoc this :channel channel)))
 
 ;; ## Wrapper
 

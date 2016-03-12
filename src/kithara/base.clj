@@ -2,6 +2,7 @@
   (:require [kithara.rabbitmq
              [consumer :as consumer]
              [message :as message]]
+            [kithara.infrastructure :as i]
             [flake.core :as flake]
             [flake.utils :refer [base62-encode]]
             [peripheral.core :refer [defcomponent]]
@@ -146,7 +147,11 @@
       (consumer/from-fn queue opts))
   :consumer
   (run-consumer! *this*)
-  #(stop-consumer! *this* %))
+  #(stop-consumer! *this* %)
+
+  i/HasQueue
+  (set-queue [this queue]
+    (assoc this :queue queue)))
 
 ;; ## Constructor
 
