@@ -12,6 +12,9 @@
 (defprotocol+ HasConnection
   (set-connection [_ connection]))
 
+(defprotocol+ HasHandler
+  (wrap-handler [_ wrap-fn]))
+
 ;; ## Do Nothing Unless Implemented
 
 (defmacro ^:private extend-identity
@@ -25,4 +28,5 @@
 (extend-identity
   [HasChannel    set-channel]
   [HasQueue      set-queue]
+  [HasHandler    wrap-handler]
   [HasConnection set-connection])

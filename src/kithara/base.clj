@@ -149,6 +149,10 @@
   (run-consumer! *this*)
   #(stop-consumer! *this* %)
 
+  i/HasHandler
+  (wrap-handler [this wrap-fn]
+    (update this :handler wrap-fn))
+
   i/HasQueue
   (set-queue [this queue]
     (assoc this :queue queue)))

@@ -17,7 +17,14 @@
 (defcomponent ConnectedConsumer [consumers]
   :this/as            *this*
   :connection         (connection/open *this*) #(connection/close %)
-  :components/running (make-consumers *this*))
+  :components/running (make-consumers *this*)
+
+  i/HasHandler
+  (wrap-handler [this wrap-fn]
+    (update this
+            :consumers
+            (fn [sq]
+              (map #(i/wrap-handler % wrap-fn) sq)))))
 
 ;; ## Wrapper
 

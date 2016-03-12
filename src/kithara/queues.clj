@@ -48,6 +48,13 @@
   :queue              (make-queue *this*)
   :components/running (make-consumers *this*)
 
+  i/HasHandler
+  (wrap-handler [this wrap-fn]
+    (update this
+            :consumers
+            (fn [sq]
+              (map #(i/wrap-handler % wrap-fn) sq))))
+
   i/HasChannel
   (set-channel [this channel]
     (assoc this :channel channel)))

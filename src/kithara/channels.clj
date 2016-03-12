@@ -20,6 +20,13 @@
   :channel            (channel/open connection *this*) #(channel/close %)
   :components/running (make-consumers *this*)
 
+  i/HasHandler
+  (wrap-handler [this wrap-fn]
+    (update this
+            :consumers
+            (fn [sq]
+              (map #(i/wrap-handler % wrap-fn) sq))))
+
   i/HasConnection
   (set-connection [this connection]
     (assoc this :connection connection)))
