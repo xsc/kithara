@@ -1,4 +1,4 @@
-# kithara
+# kithara [![Build Status](https://travis-ci.org/xsc/kithara.svg?branch=master)](https://travis-ci.org/xsc/kithara)
 
 __kithara__ is a (limited) [RabbitMQ][rabbitmq] client for Clojure, based on
 [Lyra][lyra]. Its specific scope - and thus source of its limitations - is the
