@@ -28,8 +28,8 @@ Coming soon.
           (println body))
         {:as :string})
       (rabbitmq/with-queue
-        {:queue-name   "my-queue"
-         :exchange     "my-exchange"
+        "my-queue"
+        {:exchange     "my-exchange"
          :routing-keys ["*.print"]})
       (rabbitmq/with-channel
         {:prefetch-count 20})
