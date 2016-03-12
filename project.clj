@@ -9,7 +9,9 @@
                  [org.clojure/tools.logging "0.3.1"]
                  [net.jodah/lyra "0.5.2"]
                  [com.rabbitmq/amqp-client "3.6.1" :scope "provided"]
-                 [peripheral "0.4.7"]]
+                 [peripheral "0.4.7"]
+                 [flake "0.3.1"]
+                 [potemkin "0.4.3"]]
   :profiles {:dev {:dependencies [[ch.qos.logback/logback-classic "1.1.6"]
                                   [org.slf4j/slf4j-api "1.7.18"]]}}
   :pedantic? :abort)

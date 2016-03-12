@@ -16,6 +16,29 @@ If you're looking for a more complete RabbitMQ library you should check out
 
 Coming soon.
 
+### Quickstart
+
+```clojure
+(require '[kithara.core :as rabbitmq]
+         '[com.stuartsierra.component :as component])
+
+(defonce rabbitmq-consumer
+  (-> (rabbitmq/consumer
+        (fn [{:keys [body]}]
+          (println body))
+        {:as :string})
+      (rabbitmq/with-queue
+        {:queue-name   "my-queue"
+         :exchange     "my-exchange"
+         :routing-keys ["*.print"]})
+      (rabbitmq/with-channel
+        {:prefetch-count 20})
+      (rabbitmq/with-connection
+        {:host "rabbitmq.my-cluster.com"})))
+
+(alter-var-root #'rabbitmq-consumer component/start)
+```
+
 ## License
 
 ```

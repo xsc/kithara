@@ -1,5 +1,5 @@
-(ns kithara.basic-properties
-  (:require [kithara.stringify :refer [stringify-keys1]]))
+(ns kithara.rabbitmq.basic-properties
+  (:require [kithara.rabbitmq.utils :as u]))
 
 (defn from-map
   ^com.rabbitmq.client.AMQP$BasicProperties
@@ -24,7 +24,7 @@
     correlation-id   (.correlationId correlation-id)
     delivery-mode    (.deliveryMode delivery-mode)
     expiration       (.expiration expiration)
-    headers          (.headers (stringify-keys1 headers))
+    headers          (.headers (u/stringify-keys1 headers))
     message-id       (.messageId message-id)
     priority         (.priority priority)
     reply-to         (.replyTo reply-to)

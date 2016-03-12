@@ -124,9 +124,9 @@
   {:always (RetryPolicies/retryAlways)
    :never  (RetryPolicies/retryNever)})
 
-;; ## Top-Level Config
+;; ## Behaviour Config
 
-(defconfig build :> net.jodah.lyra.config.Config
+(defconfig behaviour :> net.jodah.lyra.config.Config
   {:recovery-policy      [withRecoveryPolicy      :< recovery-policy]
    :retry-policy         [withRetryPolicy         :< retry-policy]
    :queue-recovery?      [withQueueRecovery       :< boolean]
