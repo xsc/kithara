@@ -11,7 +11,7 @@
 ;; ## Connection Data
 
 (def ^:private rabbitmq-host
-  (or (System/getenv "RABBITMQ_HOST") "localhost"))
+  (or (System/getenv "RABBITMQ_HOST") "docker"))
 
 (def ^:private rabbitmq-port
   (Long. (or (System/getenv "RABBITMQ_PORT") "5672")))

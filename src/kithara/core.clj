@@ -1,13 +1,13 @@
 (ns kithara.core
-  (:require [kithara
-             [base :as base]
-             [channels :as channels]
-             [connections :as connections]
-             [queues :as queues]]
+  (:require [kithara.components
+             [base-consumer :as base-consumer]
+             [channel-consumer :as channel-consumer]
+             [connected-consumer :as connected-consumer]
+             [queue-consumer :as queue-consumer]]
             [potemkin :refer [import-vars]]))
 
 (import-vars
-  [kithara.base        consumer]
-  [kithara.channels    with-channel]
-  [kithara.connections with-connection]
-  [kithara.queues      with-queue])
+  [kithara.components.base-consumer      consumer]
+  [kithara.components.channel-consumer   with-channel]
+  [kithara.components.connected-consumer with-connection]
+  [kithara.components.queue-consumer     with-queue])

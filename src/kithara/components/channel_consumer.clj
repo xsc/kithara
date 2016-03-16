@@ -1,13 +1,18 @@
-(ns kithara.channels
+(ns kithara.components.channel-consumer
   (:require [kithara.rabbitmq.channel :as channel]
-            [kithara.infrastructure :as i]
+            [kithara.components.protocols :as p]
             [peripheral.core :refer [defcomponent]]))
 
 ;; ## Component
 
+(defn- valid-consumers?
+  [consumers]
+  (and (every? p/has-handler? consumers)
+       (every? p/has-channel? consumers)))
+
 (defn- make-consumers
   [{:keys [consumers channel]}]
-  (map #(i/set-channel % channel) consumers))
+  (p/set-channel consumers channel))
 
 (defcomponent ChannelConsumer [consumers
                                connection
@@ -16,27 +21,35 @@
                                prefetch-size
                                prefetch-global?]
   :assert/connection? (some? connection)
+  :assert/valid?      (valid-consumers? consumers)
   :this/as            *this*
   :channel            (channel/open connection *this*) #(channel/close %)
   :components/running (make-consumers *this*)
 
-  i/HasHandler
+ p/HasHandler
   (wrap-handler [this wrap-fn]
-    (update this
-            :consumers
-            (fn [sq]
-              (map #(i/wrap-handler % wrap-fn) sq))))
+    (update this :consumers p/wrap-handler wrap-fn))
 
-  i/HasConnection
+  p/HasConnection
   (set-connection [this connection]
     (assoc this :connection connection)))
 
 ;; ## Wrapper
 
 (defn with-channel
+  "Wrap the given consumer(s) with setup/teardown of a RabbitMQ channel. The
+   following options can be given:
+
+   - `:channel-number`
+   - `:prefetch-count`
+   - `:prefetch-size`
+   - `:prefetch-global?`
+
+   Note: Consumers have to implement `HasHandler` and `HasChannel`."
   ([consumers] (with-channel consumers {}))
   ([consumers channel-options]
+   {:pre [(valid-consumers? consumers)]}
    (map->ChannelConsumer
      (merge
-       {:consumers (if (sequential? consumers) consumers [consumers])}
+       {:consumers (p/consumer-seq consumers)}
        channel-options))))

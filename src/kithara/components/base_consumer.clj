@@ -1,8 +1,8 @@
-(ns kithara.base
+(ns kithara.components.base-consumer
   (:require [kithara.rabbitmq
              [consumer :as consumer]
              [message :as message]]
-            [kithara.infrastructure :as i]
+            [kithara.components.protocols :as p]
             [flake.core :as flake]
             [flake.utils :refer [base62-encode]]
             [peripheral.core :refer [defcomponent]]
@@ -149,11 +149,11 @@
   (run-consumer! *this*)
   #(stop-consumer! *this* %)
 
-  i/HasHandler
+  p/HasHandler
   (wrap-handler [this wrap-fn]
     (update this :handler wrap-fn))
 
-  i/HasQueue
+  p/HasQueue
   (set-queue [this queue]
     (assoc this :queue queue)))
 
