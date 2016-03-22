@@ -1,10 +1,9 @@
 (ns kithara.components.base-consumer
   (:require [kithara.rabbitmq
              [consumer :as consumer]
-             [message :as message]]
+             [message :as message]
+             [utils :as u]]
             [kithara.components.protocols :as p]
-            [flake.core :as flake]
-            [flake.utils :refer [base62-encode]]
             [peripheral.core :refer [defcomponent]]
             [clojure.tools.logging :as log]))
 
@@ -108,14 +107,11 @@
 
 ;; ## Consumer Tag
 
-(defonce __flake-init__
-  (flake/init!))
-
 (defn- consumer-tag-for
   [consumer-name]
   (format "%s:%s"
           consumer-name
-          (base62-encode (flake/generate))))
+          (u/random-string)))
 
 ;; ## Component
 
