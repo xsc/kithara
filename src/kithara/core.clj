@@ -3,6 +3,7 @@
              [base-consumer :as base-consumer]
              [channel-consumer :as channel-consumer]
              [connected-consumer :as connected-consumer]
+             [dlx-consumer :as dlx-consumer]
              [queue-consumer :as queue-consumer]]
             [potemkin :refer [import-vars]]))
 
@@ -12,4 +13,6 @@
   [kithara.components.connected-consumer with-connection]
   [kithara.components.queue-consumer
    with-queue
-   with-server-named-queue])
+   with-server-named-queue]
+  [kithara.components.dlx-consumer
+   with-dead-letter-backoff])
