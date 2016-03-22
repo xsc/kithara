@@ -10,4 +10,6 @@
   [kithara.components.base-consumer      consumer]
   [kithara.components.channel-consumer   with-channel]
   [kithara.components.connected-consumer with-connection]
-  [kithara.components.queue-consumer     with-queue])
+  [kithara.components.queue-consumer
+   with-queue
+   with-server-named-queue])
