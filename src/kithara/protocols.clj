@@ -38,10 +38,18 @@
 (defmacro ^:private extend-seq
   [& protocols]
   `(do
-     ~@(for [[protocol f] protocols]
-         `(extend-protocol ~protocol
-            clojure.lang.Sequential
-            (~f [this# val#] (map #(~f % val#) this#))))))
+     ~@(for [[protocol f predicate] protocols]
+         `(do
+            (extend-protocol ~protocol
+              clojure.lang.Sequential
+              (~f [this# val#] (map #(~f % val#) this#)))
+            (defn ~(symbol (str "maybe-" f))
+              [~'value ~'arg]
+              (if (sequential? ~'value)
+                (mapv #(~(symbol (str "maybe-" f)) % ~'arg) ~'value)
+                (if (and (satisfies? ~protocol ~'value) ~'arg)
+                  (~f ~'value ~'arg)
+                  ~'value)))))))
 
 (extend-seq
   [HasChannel    set-channel]
