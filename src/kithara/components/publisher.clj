@@ -32,7 +32,11 @@
   publisher/Publisher
   (publish [_ message]
     (->> (update message :properties #(into properties %))
-         (publisher/publish channel))))
+         (publisher/publish channel)))
+
+  clojure.lang.IFn
+  (invoke [this message]
+    (publisher/publish this message)))
 
 ;; ## Constructor
 
@@ -47,7 +51,11 @@
   "Create a publisher component. Accepts all options supported by
    [[kithara.config/connection]] and [[kithara.config/behaviour]].
 
-   `properties` will be used for each message unless explicitly overridden."
+   `properties` will be used for each message unless explicitly overridden
+   (see AMQP's `BasicProperties`).
+
+   The resulting component implements `IFn` and can thus be called like a
+   simple function to publish a message."
   [options & [properties]]
   (map->Publisher
     {:options   (prepare-connection-options options)

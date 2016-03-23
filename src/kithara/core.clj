@@ -6,7 +6,6 @@
              [connected-consumer :as connected-consumer]
              [publisher :as publisher]
              [queue-consumer :as queue-consumer]]
-            [kithara.rabbitmq.publish :as publish]
             [potemkin :refer [import-vars]]))
 
 (import-vars
@@ -22,6 +21,4 @@
   [kithara.components.queue-consumer
    with-queue
    with-durable-queue
-   with-server-named-queue]
-  [kithara.rabbitmq.publish
-   publish])
+   with-server-named-queue])
