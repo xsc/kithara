@@ -4,7 +4,7 @@
              [connection :as connection]
              [channel :as channel]
              [publish :as publisher]]
-            [kithara.components.protocols :as p]
+            [kithara.protocols :as p]
             [peripheral.core :refer [defcomponent]]))
 
 ;; ## Component

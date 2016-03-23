@@ -4,7 +4,7 @@
              [publish :as publisher]
              [queue :as queue]
              [utils :as u]]
-            [kithara.components.protocols :as p]
+            [kithara.protocols :as p]
             [peripheral.core :refer [defcomponent]]))
 
 ;; ## Naming

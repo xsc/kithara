@@ -1,4 +1,4 @@
-(ns kithara.components.protocols
+(ns kithara.protocols
   "Basic protocols outlining kithara Components and their Composability."
   (:require [potemkin :refer [defprotocol+]]))
 

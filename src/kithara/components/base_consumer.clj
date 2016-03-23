@@ -4,7 +4,7 @@
              [consumer :as consumer]
              [message :as message]
              [utils :as u]]
-            [kithara.components.protocols :as p]
+            [kithara.protocols :as p]
             [peripheral.core :refer [defcomponent]]
             [clojure.tools.logging :as log]))
 

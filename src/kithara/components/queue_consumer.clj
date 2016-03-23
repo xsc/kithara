@@ -1,7 +1,7 @@
 (ns kithara.components.queue-consumer
   "Implementation of Queue setup/teardown. Please use via `kithara.core`."
   (:require [kithara.rabbitmq.queue :as queue]
-            [kithara.components.protocols :as p]
+            [kithara.protocols :as p]
             [peripheral.core :refer [defcomponent]]))
 
 ;; ## Logic

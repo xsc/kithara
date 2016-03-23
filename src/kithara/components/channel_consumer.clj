@@ -1,7 +1,7 @@
 (ns kithara.components.channel-consumer
   "Implementation of Channel setup/teardown. Please use via `kithara.core`."
   (:require [kithara.rabbitmq.channel :as channel]
-            [kithara.components.protocols :as p]
+            [kithara.protocols :as p]
             [peripheral.core :refer [defcomponent]]))
 
 ;; ## Component
