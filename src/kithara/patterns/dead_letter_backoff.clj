@@ -126,9 +126,19 @@
        (prepare-dead-message component)
        (publisher/publish dead-letter-queue)))
 
+(defn- normalize-retried-message
+  [message]
+  (if (not= (get-in message [:properties :headers :x-kithara-retries] ::none)
+            ::none)
+    (-> message
+        (update-in [:properties :headers] dissoc :x-death)
+        (assoc :redelivered? true))
+    message))
+
 (defn- handle-with-backoff
   [component handler message]
-  (let [{:keys [done? nack? reject?] :as result} (handler message)
+  (let [message' (normalize-retried-message message)
+        {:keys [done? nack? reject?] :as result} (handler message')
         requeue? (get result :requeue? nack?)]
     (if-not done?
       (if (and (or nack? reject?) requeue?)
