@@ -301,3 +301,18 @@
      :backoff-exchange (as-exchange-map backoff-exchange)
      :retry-exchange   (as-exchange-map retry-exchange)
      :queue            (as-queue-map queue)}))
+
+(defn with-durable-dead-letter-backoff
+  "See `with-dead-letter-backoff`. Will create/expect durable, non-exclusive and
+   non-auto-delete dead-letter queues/exchanges.
+
+   Note that this makes only sense if the original consumer queue has the same
+   properties, since otherwise you'll lose dead-lettered messages on retry."
+  [consumers & [{:keys [backoff-exchange retry-exchange queue]}]]
+  {:pre [(valid-consumers? consumers)]}
+  (let [durify #(merge % {:durable? true, :exclusive? false, :auto-delete? false})]
+    (map->DLXConsumer
+      {:consumers        (p/consumer-seq consumers)
+       :backoff-exchange (durify (as-exchange-map backoff-exchange))
+       :retry-exchange   (durify (as-exchange-map retry-exchange))
+       :queue            (durify (as-queue-map queue))})))
