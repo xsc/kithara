@@ -9,7 +9,7 @@
                  [org.clojure/tools.logging "0.3.1"]
                  [net.jodah/lyra "0.5.2"]
                  [com.rabbitmq/amqp-client "3.6.1" :scope "provided"]
-                 [peripheral "0.4.7"]
+                 [peripheral "0.5.0"]
                  [flake "0.3.1"]
                  [potemkin "0.4.3"]]
   :profiles {:dev {:dependencies [[ch.qos.logback/logback-classic "1.1.6"]
