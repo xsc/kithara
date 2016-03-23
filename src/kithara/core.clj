@@ -13,6 +13,4 @@
   [kithara.components.connected-consumer with-connection]
   [kithara.components.queue-consumer
    with-queue
-   with-server-named-queue]
-  [kithara.components.dlx-consumer
-   with-dead-letter-backoff])
+   with-server-named-queue])
