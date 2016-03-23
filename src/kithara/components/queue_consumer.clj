@@ -163,7 +163,9 @@
        {:exchange \"exchange\", :routing-keys [\"#\"]}))
    ```
 
-   Note: Consumers have to implement [[HasHandler]] and [[HasQueue]]."
+   Note: Consumers have to implement [[HasHandler]] and [[HasQueue]]. They may
+   implement [[HasChannel]] and [[HasConnection]] to receive a channel/connection
+   if associated with this queue."
   [consumers & bindings]
   {:pre [(valid-consumers? consumers)]}
   (map->QueueConsumer

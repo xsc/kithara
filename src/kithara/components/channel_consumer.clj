@@ -59,7 +59,9 @@
    If no options are given, a channel with server-side default settings will
    be set up.
 
-   Note: Consumers have to implement [[HasHandler]] and [[HasChannel]]."
+   Note: Consumers have to implement [[HasHandler]] and [[HasChannel]]. They may
+   implement [[HasQueue]] and [[HasConnection]] to receive a queue/connection
+   if associated with the channel."
   ([consumers] (with-channel consumers {}))
   ([consumers channel-options]
    {:pre [(valid-consumers? consumers)]}
