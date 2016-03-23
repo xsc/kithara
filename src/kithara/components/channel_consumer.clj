@@ -12,11 +12,15 @@
        (every? p/has-channel? consumers)))
 
 (defn- make-consumers
-  [{:keys [consumers channel]}]
-  (p/set-channel consumers channel))
+  [{:keys [consumers connection queue channel]}]
+  (-> consumers
+      (p/set-channel channel)
+      (p/maybe-set-queue queue)
+      (p/maybe-set-connection connection)))
 
 (defcomponent ChannelConsumer [consumers
                                connection
+                               queue
                                channel-number
                                prefetch-count
                                prefetch-size
@@ -27,9 +31,13 @@
   :channel            (channel/open connection *this*) #(channel/close %)
   :components/running (make-consumers *this*)
 
- p/HasHandler
+  p/HasHandler
   (wrap-handler [this wrap-fn]
     (update this :consumers p/wrap-handler wrap-fn))
+
+  p/HasQueue
+  (set-queue [this queue]
+    (assoc this :queue queue))
 
   p/HasConnection
   (set-connection [this connection]
