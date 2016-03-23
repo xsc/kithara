@@ -14,14 +14,14 @@
                   (.createChannel c (int channel-number))
                   (.createChannel c))]
     (when prefetch-count
-      (cond (and prefetch-size prefetch-global?)
+      (cond (and prefetch-size (some? prefetch-global?))
             (.basicQos
               ch
-              (int prefetch-count)
               (int prefetch-size)
+              (int prefetch-count)
               (boolean prefetch-global?))
-            prefetch-size
-            (.basicQos ch (int prefetch-count) (int prefetch-size))
+            (some? prefetch-global?)
+            (.basicQos ch (int prefetch-count) (boolean prefetch-global?))
             :else (.basicQos ch (int prefetch-count))))
     ch))
 

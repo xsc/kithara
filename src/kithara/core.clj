@@ -9,7 +9,9 @@
 
 (import-vars
   [kithara.components.base-consumer      consumer]
-  [kithara.components.channel-consumer   with-channel]
+  [kithara.components.channel-consumer
+   with-channel
+   with-prefetch-channel]
   [kithara.components.connected-consumer with-connection]
   [kithara.components.queue-consumer
    with-queue

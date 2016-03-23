@@ -48,7 +48,7 @@
    - `:prefetch-size`
    - `:prefetch-global?`
 
-   If not options are given, a channel with server-side default settings will
+   If no options are given, a channel with server-side default settings will
    be set up.
 
    Note: Consumers have to implement [[HasHandler]] and [[HasChannel]]."
@@ -59,3 +59,11 @@
      (merge
        {:consumers (p/consumer-seq consumers)}
        channel-options))))
+
+(defn with-prefetch-channel
+  "See [[with-channel]]. Convenience function setting the per-channel prefetch
+   count directly."
+  [consumers prefetch-count & [channel-options]]
+  (->> channel-options
+       (merge {:prefetch-count prefetch-count})
+       (with-channel consumers)))
