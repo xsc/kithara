@@ -4,15 +4,41 @@
 <p>Options:</p>
 <ul>
   <li><code>:consumer-name</code>: the consumer’s name,</li>
-  <li><code>:default</code>: the default result map (see <a href="null">wrap</a>),</li>
-  <li><code>:error-default</code>: the default result map on exception (see <a href="null">wrap</a>),</li>
+  <li><code>:default</code>: the default result map,</li>
+  <li><code>:error-default</code>: the exception result map,</li>
   <li><code>:as</code>: the coercer to use for incoming message bodies,</li>
   <li><code>:consumer-tag</code>,</li>
   <li><code>:local?</code>,</li>
   <li><code>:exclusive?</code>,</li>
   <li><code>:arguments</code>.</li>
 </ul>
-<p>See the documentation of <code>basic.consume</code> for an explanation of these options.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/components/base_consumer.clj#L161">view source</a></div></div><div class="public anchor" id="var-with-channel"><h3>with-channel</h3><div class="usage"><code>(with-channel consumers)</code><code>(with-channel consumers channel-options)</code></div><div class="doc"><div class="markdown"><p>Wrap the given consumer(s) with setup/teardown of a RabbitMQ channel. The following options can be given:</p>
+<p>See the documentation of <code>basic.consume</code> for an explanation of <code>:consumer-tag</code>, <code>:local?</code>, <code>:exclusive?</code> and <code>:arguments</code>.</p>
+<p>The following values are valid for <code>:as</code>:</p>
+<ul>
+  <li><code>:bytes</code> (default),</li>
+  <li><code>:string</code> (== <code>:utf8-string</code>),</li>
+  <li>any function taking the raw byte array as input,</li>
+  <li>any value implementing <a href="kithara.protocols.html#var-Coercer">kithara.protocols/Coercer</a>.</li>
+</ul>
+<p>The handler function gets a message map with the following keys:</p>
+<ul>
+  <li><code>:channel</code>: the channel the message was received on,</li>
+  <li><code>:exchange</code>: the exchange the message was published to,</li>
+  <li><code>:routing-key</code>: the message’s routing key,</li>
+  <li><code>:body</code>: the coerced body,</li>
+  <li><code>:body-raw</code>: the body as a byte array,</li>
+  <li><code>:properties</code>: a map of message properties,</li>
+  <li><code>:redelivered?</code>: whether the message was redelivered,</li>
+  <li><code>:delivery-tag</code>: the message’s delivery tag.</li>
+</ul>
+<p>Messages will be confirmed based on the return value of the handler function (with <code>:error-default</code> being used on exception and <code>:default</code> if an unknown value is encountered):</p>
+<ul>
+  <li><code>{:reject? true, :requeue? &lt;bool&gt;}</code> -&gt; REJECT (defaults to no requeue),</li>
+  <li><code>{:nack? true, :requeue? &lt;bool&gt;}</code> -&gt; NACK (defaults to requeue),</li>
+  <li><code>{:ack? true}</code>-&gt; ACK,</li>
+  <li><code>{:done? true}</code> -&gt; do nothing (was handled directly).</li>
+</ul>
+<p>Additionally, <code>:message</code> (a string) and <code>:error</code> (a <code>Throwable</code>) keys can be added to trigger a log message.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/components/base_consumer.clj#L161">view source</a></div></div><div class="public anchor" id="var-with-channel"><h3>with-channel</h3><div class="usage"><code>(with-channel consumers)</code><code>(with-channel consumers channel-options)</code></div><div class="doc"><div class="markdown"><p>Wrap the given consumer(s) with setup/teardown of a RabbitMQ channel. The following options can be given:</p>
 <ul>
   <li><code>:channel-number</code></li>
   <li><code>:prefetch-count</code></li>
