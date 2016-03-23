@@ -149,12 +149,14 @@
       result)))
 
 (defn- make-consumers
-  [{:keys [consumers consumer-queue] :as component}]
+  [{:keys [consumers connection channel consumer-queue] :as component}]
   (-> consumers
       (p/wrap-handler
         (fn [handler]
           #(handle-with-backoff component handler %)))
-      (p/set-queue consumer-queue)))
+      (p/set-queue consumer-queue)
+      (p/maybe-set-connection connection)
+      (p/maybe-set-channel channel)))
 
 ;; ## Component
 
@@ -164,6 +166,8 @@
        (every? p/has-queue? consumers)))
 
 (defcomponent DLXConsumer [consumers
+                           connection
+                           channel
                            consumer-queue
                            backoff-exchange
                            retry-exchange
@@ -183,6 +187,14 @@
   p/HasHandler
   (wrap-handler [this wrap-fn]
     (update this :consumers p/wrap-handler wrap-fn))
+
+  p/HasChannel
+  (set-channel [this channel]
+    (assoc this :channel channel))
+
+  p/HasConnection
+  (set-connection [this connection]
+    (assoc this :connection connection))
 
   p/HasQueue
   (set-queue [this queue]
