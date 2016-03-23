@@ -117,15 +117,16 @@
 ;; ## Component
 
 (defn- run-consumer!
-  [{:keys [consumer-name queue opts impl]}]
+  [{:keys [consumer-name channel queue opts impl]}]
   (let [consumer-tag (or (:consumer-tag opts) (consumer-tag-for consumer-name))
         opts         (assoc opts
+                            :queue-name   (:queue-name queue)
                             :consumer-tag consumer-tag
                             :auto-ack?    false)]
     (log/debugf "[%s] starting consumer (desired tag: '%s') ..."
                 consumer-name
                 consumer-tag)
-    (consumer/consume queue opts impl)))
+    (consumer/consume channel opts impl)))
 
 (defn- stop-consumer!
   [{:keys [consumer-name]} consumer-value]
@@ -134,16 +135,22 @@
 
 (defcomponent BaseConsumer [consumer-name
                             queue
+                            channel
                             handler
                             opts]
-  :this/as       *this*
-  :assert/queue? (some? queue)
-  :impl          (-> handler (wrap consumer-name opts) (consumer/from-fn queue opts))
-  :consumer      (run-consumer! *this*) #(stop-consumer! *this* %)
+  :this/as         *this*
+  :assert/queue?   (some? queue)
+  :assert/channel? (some? channel)
+  :impl            (-> handler (wrap consumer-name opts) (consumer/from-fn channel opts))
+  :consumer        (run-consumer! *this*) #(stop-consumer! *this* %)
 
   p/HasHandler
   (wrap-handler [this wrap-fn]
     (update this :handler wrap-fn))
+
+  p/HasChannel
+  (set-channel [this channel]
+    (assoc this :channel channel))
 
   p/HasQueue
   (set-queue [this queue]
