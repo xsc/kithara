@@ -12,4 +12,5 @@
   [kithara.components.connected-consumer with-connection]
   [kithara.components.queue-consumer
    with-queue
+   with-durable-queue
    with-server-named-queue])

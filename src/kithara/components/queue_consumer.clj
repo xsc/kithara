@@ -106,6 +106,19 @@
           :bindings       bindings}
          (dissoc queue-options :bindings))))))
 
+(defn with-durable-queue
+  "See `with-queue`. Will create/expect a durable, non-exclusive and
+   non-auto-delete queue."
+  ([consumers queue-name]
+   (with-durable-queue consumers queue-name {:declare-queue? false}))
+  ([consumers queue-name queue-options & more-bindings]
+   (let [queue-options' (merge
+                          queue-options
+                          {:durable? true
+                           :exclusive? false
+                           :auto-delete? false})]
+     (apply with-queue consumers queue-name queue-options' more-bindings))))
+
 (defn with-server-named-queue
   "Wrap the given consumer(s) with setup/teardown of a server-named, exclusive,
    non-durable, auto-deleted queue.
