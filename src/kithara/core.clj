@@ -3,7 +3,6 @@
              [base-consumer :as base-consumer]
              [channel-consumer :as channel-consumer]
              [connected-consumer :as connected-consumer]
-             [dlx-consumer :as dlx-consumer]
              [queue-consumer :as queue-consumer]]
             [potemkin :refer [import-vars]]))
 
