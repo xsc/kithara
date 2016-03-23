@@ -136,15 +136,10 @@
                             queue
                             handler
                             opts]
+  :this/as       *this*
   :assert/queue? (some? queue)
-  :this/as *this*
-  :impl
-  (-> handler
-      (wrap consumer-name opts)
-      (consumer/from-fn queue opts))
-  :consumer
-  (run-consumer! *this*)
-  #(stop-consumer! *this* %)
+  :impl          (-> handler (wrap consumer-name opts) (consumer/from-fn queue opts))
+  :consumer      (run-consumer! *this*) #(stop-consumer! *this* %)
 
   p/HasHandler
   (wrap-handler [this wrap-fn]
