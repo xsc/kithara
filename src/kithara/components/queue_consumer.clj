@@ -1,19 +1,21 @@
 (ns kithara.components.queue-consumer
   "Implementation of Queue setup/teardown. Please use via `kithara.core`."
-  (:require [kithara.rabbitmq.queue :as queue]
+  (:require [kithara.rabbitmq
+             [queue :as queue]
+             [channel :as channel]]
             [kithara.protocols :as p]
             [peripheral.core :refer [defcomponent]]))
 
 ;; ## Logic
 
 (defn- declare-queue
-  [{:keys [channel queue-name declare-queue?] :as opts}]
+  [{:keys [declare-channel queue-name declare-queue?] :as opts}]
   (if declare-queue?
     (if queue-name
       (let [opts' (assoc opts :arguments (:declare-arguments opts))]
-        (queue/declare channel queue-name opts'))
-      (queue/declare channel))
-    (queue/declare-passive channel queue-name)))
+        (queue/declare declare-channel queue-name opts'))
+      (queue/declare declare-channel))
+    (queue/declare-passive declare-channel queue-name)))
 
 (defn- bind-queue
   [queue {:keys [bindings declare-queue?]}]
@@ -31,8 +33,21 @@
     (bind-queue opts)))
 
 (defn- make-consumers
-  [{:keys [consumers queue]}]
-  (p/set-queue consumers queue))
+  [{:keys [consumers connection channel queue]}]
+  (-> consumers
+      (p/set-queue queue)
+      (p/maybe-set-channel channel)
+      (p/maybe-set-connection connection)))
+
+(defn- open-channel
+  [{:keys [channel connection]}]
+  (or channel (channel/open connection)))
+
+(defn- close-channel
+  [{:keys [channel]} ch]
+  (when channel
+    (channel/close ch))
+  nil)
 
 ;; ## Component
 
@@ -43,12 +58,14 @@
 
 (defcomponent QueueConsumer [consumers
                              channel
+                             connection
                              queue-name
                              bindings
                              declare-queue?]
-  :assert/channel?    (some? channel)
-  :assert/valid?      (valid-consumers? consumers)
   :this/as            *this*
+  :assert/connection? (some? connection)
+  :assert/valid?      (valid-consumers? consumers)
+  :declare-channel    (open-channel *this*) #(close-channel *this* %)
   :queue              (make-queue *this*)
   :components/running (make-consumers *this*)
 
@@ -58,7 +75,11 @@
 
   p/HasChannel
   (set-channel [this channel]
-    (assoc this :channel channel)))
+    (assoc this :channel channel))
+
+  p/HasConnection
+  (set-connection [this connection]
+    (assoc this :connection connection)))
 
 (p/hide-constructors QueueConsumer)
 
