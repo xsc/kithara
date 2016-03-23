@@ -85,7 +85,7 @@
   [class]
   #(into-array class %))
 
-(defn with
+(defn- with
   [f mapping]
   (fn [value]
     (f (get mapping value value))))
