@@ -5,7 +5,7 @@
             :url "http://opensource.org/licenses/MIT"
             :year 2016
             :key "mit"}
-  :dependencies [[org.clojure/clojure "1.8.0"]
+  :dependencies [[org.clojure/clojure "1.8.0" :scope "provided"]
                  [org.clojure/tools.logging "0.3.1"]
                  [net.jodah/lyra "0.5.2"]
                  [com.rabbitmq/amqp-client "3.6.1" :scope "provided"]
@@ -21,6 +21,6 @@
                            :output-path "doc"
                            :namespaces [kithara.core
                                         kithara.config
-                                        #"kithara\.components\..+"
-                                        #"kithara\.patterns\..+"]}}}
+                                        kithara.protocols
+                                        #"^kithara\.patterns\.[a-z\-]+"]}}}
   :pedantic? :abort)
