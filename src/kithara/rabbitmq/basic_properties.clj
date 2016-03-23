@@ -75,7 +75,7 @@
 (defn to-map
   [^com.rabbitmq.client.AMQP$BasicProperties properties]
   {:app-id           (.getAppId properties)
-   :cluser-id        (.getClusterId properties)
+   :cluster-id       (.getClusterId properties)
    :content-encoding (.getContentEncoding properties)
    :content-type     (.getContentType properties)
    :correlation-id   (.getCorrelationId properties)
