@@ -4,7 +4,9 @@
              [base-consumer :as base-consumer]
              [channel-consumer :as channel-consumer]
              [connected-consumer :as connected-consumer]
+             [publisher :as publisher]
              [queue-consumer :as queue-consumer]]
+            [kithara.rabbitmq.publish :as publish]
             [potemkin :refer [import-vars]]))
 
 (import-vars
@@ -15,7 +17,11 @@
    with-prefetch-channel]
   [kithara.components.connected-consumer
    with-connection]
+  [kithara.components.publisher
+   publisher]
   [kithara.components.queue-consumer
    with-queue
    with-durable-queue
-   with-server-named-queue])
+   with-server-named-queue]
+  [kithara.rabbitmq.publish
+   publish])
