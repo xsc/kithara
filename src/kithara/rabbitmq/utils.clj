@@ -3,10 +3,11 @@
             [flake.utils :refer [base62-encode]]))
 
 (defonce __flake-init__
-  (flake/init!))
+  (delay (flake/init!)))
 
 (defn random-string
   []
+  @__flake-init__
   (base62-encode (flake/generate)))
 
 (defn stringify-keys1
