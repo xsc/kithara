@@ -1,4 +1,5 @@
 (ns kithara.config
+  "Lyra configuration builders."
   (:import [net.jodah.lyra.config
             RecoveryPolicies
             RetryPolicies]
@@ -36,12 +37,22 @@
 
 (defn- generate-meta
   [result-class mapping]
-  {:arglists '([] [configuration-map] [base configuration-map])
-   :tag      result-class
-   :doc      (apply str
-                    "Generates a `" result-class "` (see Lyra documentation).\n\n"
-                    (for [[k [f]] (sort-by key mapping)]
-                      (str "    - `" k "`: delegates to `" f "`.\n")))})
+  (let [max-len (+ 3 (apply max (map (comp count name key) mapping)))
+        padded-fmt (str "%-" max-len "s")
+        padded #(format padded-fmt %)
+        sep (apply str \: (repeat (dec max-len) \-))]
+    {:arglists '([] [configuration-map] [base configuration-map])
+     :tag      result-class
+     :doc      (str (apply str
+                           "Generates a `" result-class "` (see Lyra documentation).\n\n"
+                           "| " (padded "option") " | |\n"
+                           "| " sep " | ------------ |\n"
+                           (for [[k [f]] (sort-by key mapping)]
+                             (format "| %s | delegates to `%s` |\n"
+                                     (padded (str "`" k "`"))
+                                     f)))
+                    "\n`base` can be an instance of `" result-class "` in which case all "
+                    "of the given options will be applied to it.")}))
 
 (defmacro ^:private defconfig
   "Creates a function that converts a value (e.g. a Clojure map) into a

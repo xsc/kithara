@@ -1,4 +1,5 @@
 (ns kithara.components.queue-consumer
+  "Implementation of Queue setup/teardown. Please use via `kithara.core`."
   (:require [kithara.rabbitmq.queue :as queue]
             [kithara.components.protocols :as p]
             [peripheral.core :refer [defcomponent]]))
@@ -59,6 +60,8 @@
   (set-channel [this channel]
     (assoc this :channel channel)))
 
+(p/hide-constructors QueueConsumer)
+
 ;; ## Wrapper
 
 (defn with-queue
@@ -88,7 +91,7 @@
        {:exchange \"other\", :routing-keys [\"*.message\"]}))
    ```
 
-   Note: Consumers have to implement `HasHandler` and `HasQueue`."
+   Note: Consumers have to implement [[HasHandler]] and [[HasQueue]]."
   ([consumers queue-name]
    (with-queue consumers queue-name {:declare-queue? false}))
   ([consumers queue-name queue-options & more-bindings]
@@ -107,7 +110,7 @@
          (dissoc queue-options :bindings))))))
 
 (defn with-durable-queue
-  "See `with-queue`. Will create/expect a durable, non-exclusive and
+  "See [[with-queue]]. Will create/expect a durable, non-exclusive and
    non-auto-delete queue."
   ([consumers queue-name]
    (with-durable-queue consumers queue-name {:declare-queue? false}))
@@ -139,7 +142,7 @@
        {:exchange \"exchange\", :routing-keys [\"#\"]}))
    ```
 
-   Note: Consumers have to implement `HasHandler` and `HasQueue`."
+   Note: Consumers have to implement [[HasHandler]] and [[HasQueue]]."
   [consumers & bindings]
   {:pre [(valid-consumers? consumers)]}
   (map->QueueConsumer

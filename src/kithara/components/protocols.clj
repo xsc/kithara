@@ -1,4 +1,5 @@
 (ns kithara.components.protocols
+  "Basic protocols outlining kithara Components and their Composability."
   (:require [potemkin :refer [defprotocol+]]))
 
 ;; ## Protccols
@@ -22,6 +23,7 @@
   `(do
      ~@(for [[protocol f] protocols]
          `(defn ~f
+            ~(str "Check whether the given `value` implements [[" protocol "]].")
             [~'value]
             (satisfies? ~protocol ~'value)))))
 
@@ -49,17 +51,23 @@
 
 ;; ## Helper
 
-(defn consumer-seq
+(defn ^:no-doc consumer-seq
   [value]
   (if (sequential? value)
     (vec value)
     [value]))
 
-(defn hide
+(defn ^:no-doc hide
   [data]
   (with-meta '<hidden> ::secret data))
 
-(defn reveal
+(defn ^:no-doc reveal
   [data]
   {:pre [(= data '<hidden>)]}
   (-> data meta ::scret))
+
+(defmacro ^:no-doc hide-constructors
+  [record]
+  (let [->var (fn [prefix] `(var ~(symbol (str prefix record))))]
+    `(doseq [v# [~(->var "->") ~(->var "map->")]]
+       (alter-meta! v# assoc :private true))))

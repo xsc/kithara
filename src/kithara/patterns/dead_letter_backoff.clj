@@ -188,6 +188,8 @@
   (set-queue [this queue]
     (assoc this :consumer-queue queue)))
 
+(p/hide-constructors DLXConsumer)
+
 ;; ## Option Helpers
 
 (defn- as-exchange-map
@@ -217,7 +219,7 @@
   "Wrap the given consumer(s) with setup of dead letter queues and exchanges.
    The following options can be given:
 
-   - `queue`: options for the dead letter queue (including `:queue-name`,
+   - `:queue`: options for the dead letter queue (including `:queue-name`,
      `:durable?`, `:exclusive?` and `:auto-delete?`),
    - `:backoff-exchange`: options for the exchange the dead letter queue will be
      bound to (including `:exchange-name`, `:durable?`, `:exclusive?` and
@@ -242,7 +244,7 @@
          ...))
    ```
 
-   Note: Consumers have to implement `HasHandler` and `HasQueue`.
+   Note: Consumers have to implement [[HasHandler]] and [[HasQueue]].
 
    __Topology__
 
@@ -264,19 +266,17 @@
 
    This will create/expect the following exchanges/queues:
 
-   - \"consumer-exchange\" (has to exist),
-   - \"consumer-queue--retry\" (fanout exchange),
-   - \"consumer-queue--backoff\" (fanout exchange),
-   - \"consumer-queue--dead-letters\" (queue with \"x-dead-letter-exchange\" set
-     to \"consumer-queue--retry\").
+   | ------------------------------ |:--------:| --- |
+   | `consumer-exchange`            | exchange | has to exist |
+   | `consumer-queue--retry`        | exchange | fanout exchange |
+   | `consumer-queue--backoff`      | exchange | fanout exchange |
+   | `consumer-queue--dead-letters` | queue    | `x-dead-letter-exchange: <retry exchange>` |
 
    And the following bindings:
 
-   - \"consumer-queue\":
-     - \"#\" via \"consumer-exchange\"
-     - all from fanout \"consumer-queue--retry\"
-   - \"consumer-queue--dead-letters\":
-     - all from fanout \"consumer-queue--backoff\"
+   | ------------------------------ | --- |
+   | `consumer-queue`               | - `#` via `consumer-exchange`<br />- all from `consumer-queue--retry` (fanout) |
+   | `consumer-queue--dead-letters` | all from `consumer-queue--backoff` (fanout) |
 
    __Behaviour__
 
@@ -290,10 +290,14 @@
       exchange. Since a binding to this exchange was added to the original
       consumer queue, the message will reappear there.
 
+   __Caveat__
+
    There is one caveat (also noted in the RabbitMQ documentation), consisting of
    expiry only happening at the head of the queue. This means that all messages
    in the dead letter queue will take at least the same time as the current head
-   to be republished."
+   to be republished.
+
+   See: https://www.rabbitmq.com/ttl.html"
   [consumers & [{:keys [backoff-exchange retry-exchange queue]}]]
   {:pre [(valid-consumers? consumers)]}
   (map->DLXConsumer
@@ -303,7 +307,7 @@
      :queue            (as-queue-map queue)}))
 
 (defn with-durable-dead-letter-backoff
-  "See `with-dead-letter-backoff`. Will create/expect durable, non-exclusive and
+  "See [[with-dead-letter-backoff]]. Will create/expect durable, non-exclusive and
    non-auto-delete dead-letter queues/exchanges.
 
    Note that this makes only sense if the original consumer queue has the same

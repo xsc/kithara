@@ -1,4 +1,5 @@
 (ns kithara.components.channel-consumer
+  "Implementation of Channel setup/teardown. Please use via `kithara.core`."
   (:require [kithara.rabbitmq.channel :as channel]
             [kithara.components.protocols :as p]
             [peripheral.core :refer [defcomponent]]))
@@ -34,6 +35,8 @@
   (set-connection [this connection]
     (assoc this :connection connection)))
 
+(p/hide-constructors ChannelConsumer)
+
 ;; ## Wrapper
 
 (defn with-channel
@@ -45,7 +48,10 @@
    - `:prefetch-size`
    - `:prefetch-global?`
 
-   Note: Consumers have to implement `HasHandler` and `HasChannel`."
+   If not options are given, a channel with server-side default settings will
+   be set up.
+
+   Note: Consumers have to implement [[HasHandler]] and [[HasChannel]]."
   ([consumers] (with-channel consumers {}))
   ([consumers channel-options]
    {:pre [(valid-consumers? consumers)]}

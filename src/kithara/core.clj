@@ -1,4 +1,5 @@
 (ns kithara.core
+  "Public API for simple RabbitMQ consumer creation."
   (:require [kithara.components
              [base-consumer :as base-consumer]
              [channel-consumer :as channel-consumer]

@@ -13,5 +13,14 @@
                  [flake "0.3.1"]
                  [potemkin "0.4.3"]]
   :profiles {:dev {:dependencies [[ch.qos.logback/logback-classic "1.1.6"]
-                                  [org.slf4j/slf4j-api "1.7.18"]]}}
+                                  [org.slf4j/slf4j-api "1.7.18"]]
+                   :plugins [[lein-codox "0.9.4"]]
+                   :codox {:project {:name "kithara"}
+                           :metadata {:doc/format :markdown}
+                           :source-uri "https://github.com/xsc/kithara/blob/v{version}/{filepath}#L{line}"
+                           :output-path "doc"
+                           :namespaces [kithara.core
+                                        kithara.config
+                                        #"kithara\.components\..+"
+                                        #"kithara\.patterns\..+"]}}}
   :pedantic? :abort)

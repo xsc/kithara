@@ -1,4 +1,5 @@
 (ns kithara.components.connected-consumer
+  "Implementation of Connection setup/teardown. Please use via `kithara.core`."
   (:require [kithara.rabbitmq
              [connection :as connection]
              [channel :as channel]
@@ -39,6 +40,8 @@
   (wrap-handler [this wrap-fn]
     (update this :consumers p/wrap-handler wrap-fn)))
 
+(p/hide-constructors ConnectedConsumer)
+
 ;; ## Wrapper
 
 (defn- prepare-connection-options
@@ -50,8 +53,8 @@
 
 (defn with-connection
   "Wrap the given consumer(s) with connection setup/teardown. Accepts
-   all options supported by `kithara.config/connection` and
-   `kithara.config/behaviour`.
+   all options supported by [[kithara.config/connection]] and
+   [[kithara.config/behaviour]].
 
    ```
    (defonce rabbitmq-consumer
@@ -63,7 +66,7 @@
         :password \"i-am-secret\"}))
    ```
 
-   Note: Consumers have to implement `HasHandler` and `HasConnection`."
+   Note: Consumers have to implement [[HasHandler]] and [[HasConnection]]."
   ([consumers] (with-connection consumers {}))
   ([consumers connection-options]
    {:pre [(valid-consumers? consumers)]}

@@ -1,4 +1,5 @@
 (ns kithara.components.base-consumer
+  "Implementation of Consumer setup/teardown. Please use via `kithara.core`."
   (:require [kithara.rabbitmq
              [consumer :as consumer]
              [message :as message]
@@ -153,6 +154,8 @@
   (set-queue [this queue]
     (assoc this :queue queue)))
 
+(p/hide-constructors BaseConsumer)
+
 ;; ## Constructor
 
 (defn consumer
@@ -161,7 +164,8 @@
    Options:
 
    - `:consumer-name`: the consumer's name,
-   - `:default`: the default result map (see `kithara.base/wrap`),
+   - `:default`: the default result map (see [[wrap]]),
+   - `:error-default`: the default result map on exception (see [[wrap]]),
    - `:as`: the coercer to use for incoming message bodies,
    - `:consumer-tag`,
    - `:local?`,
