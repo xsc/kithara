@@ -1,5 +1,6 @@
 (ns kithara.rabbitmq.message
   (:require [kithara.rabbitmq.basic-properties :as basic-properties]
+            [kithara.protocols :as p]
             [potemkin :refer [defprotocol+]])
   (:import [com.rabbitmq.client Channel Envelope]))
 
@@ -42,25 +43,6 @@
    :redelivered? (.isRedeliver envelope)
    :delivery-tag (.getDeliveryTag envelope)})
 
-;; ## Coercion
-
-(defprotocol+ Coercer
-  (coerce [_ ^bytes body]))
-
-(extend-protocol Coercer
-  clojure.lang.Keyword
-  (coerce [k body]
-    (case k
-      :bytes                 body
-      (:string :utf8-string) (String. ^bytes body "UTF-8")
-      (throw
-        (IllegalArgumentException.
-          (str "unknown coercion target: " k)))))
-
-  clojure.lang.AFn
-  (coerce [f body]
-    (f body)))
-
 ;; ## Build
 
 (defn build
@@ -81,7 +63,7 @@
    & [{:keys [as] :or {as :bytes}}]]
   (merge
     {:channel       channel
-     :body          (coerce as body)
+     :body          (p/coerce as body)
      :body-raw      body
      :properties    (basic-properties/to-map properties)}
     (envelope-as-map envelope)))

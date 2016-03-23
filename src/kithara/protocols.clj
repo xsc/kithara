@@ -49,6 +49,25 @@
   [HasHandler    wrap-handler]
   [HasConnection set-connection])
 
+;; ## Coercer
+
+(defprotocol+ Coercer
+  (coerce [_ ^bytes body]))
+
+(extend-protocol Coercer
+  clojure.lang.Keyword
+  (coerce [k body]
+    (case k
+      :bytes                 body
+      (:string :utf8-string) (String. ^bytes body "UTF-8")
+      (throw
+        (IllegalArgumentException.
+          (str "unknown coercion target: " k)))))
+
+  clojure.lang.AFn
+  (coerce [f body]
+    (f body)))
+
 ;; ## Helper
 
 (defn ^:no-doc consumer-seq
