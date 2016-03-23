@@ -164,16 +164,46 @@
    Options:
 
    - `:consumer-name`: the consumer's name,
-   - `:default`: the default result map (see [[wrap]]),
-   - `:error-default`: the default result map on exception (see [[wrap]]),
+   - `:default`: the default result map,
+   - `:error-default`: the exception result map,
    - `:as`: the coercer to use for incoming message bodies,
    - `:consumer-tag`,
    - `:local?`,
    - `:exclusive?`,
    - `:arguments`.
 
-   See the documentation of `basic.consume` for an explanation of these
-   options."
+   See the documentation of `basic.consume` for an explanation of `:consumer-tag`,
+   `:local?`, `:exclusive?` and `:arguments`.
+
+   The following values are valid for `:as`:
+
+   - `:bytes` (default),
+   - `:string` (== `:utf8-string`),
+   - any function taking the raw byte array as input,
+   - any value implementing [[kithara.protocols/Coercer]].
+
+   The handler function gets a message map with the following keys:
+
+   - `:channel`: the channel the message was received on,
+   - `:exchange`: the exchange the message was published to,
+   - `:routing-key`: the message's routing key,
+   - `:body`: the coerced body,
+   - `:body-raw`: the body as a byte array,
+   - `:properties`: a map of message properties,
+   - `:redelivered?`: whether the message was redelivered,
+   - `:delivery-tag`: the message's delivery tag.
+
+   Messages will be confirmed based on the return value of the handler function
+   (with `:error-default` being used on exception and `:default` if an unknown
+   value is encountered):
+
+   - `{:reject? true, :requeue? <bool>}` -> REJECT (defaults to no requeue),
+   - `{:nack? true, :requeue? <bool>}` -> NACK (defaults to requeue),
+   - `{:ack? true}`-> ACK,
+   - `{:done? true}` -> do nothing (was handled directly).
+
+   Additionally, `:message` (a string) and `:error` (a `Throwable`) keys can be
+   added to trigger a log message."
   [handler
    {:keys [consumer-name]
     :or {consumer-name "kithara"}
