@@ -39,6 +39,34 @@ Coming soon.
 (alter-var-root #'rabbitmq-consumer component/start)
 ```
 
+## Common Messaging Patterns
+
+Kithara aims to provide easily usable implementations for common messaging
+patterns and scenarios.
+
+### Backoff via Dead-Letter-Queues
+
+The namespace `kithara.patterns.dead-letter-backoff` contains two wrappers
+`with-dead-letter-backoff` and `with-durable-dead-letter-backoff` providing
+delayed requeuing of messages by dispatching them to a secondary queue, the
+"dead letter queue", first. They have to be applied after `with-queue`.
+
+The simplest version infers names of additional exchanges/queues using the
+original consumer queue:
+
+```clojure
+(require '[kithara.patterns.dead-letter-backoff :as dlx])
+
+(defonce rabbitmq-consumer-with-backoff
+  (-> (rabbitmq/consumer ...)
+      (dlx/with-dead-letter-backoff)
+      (rabbitmq/with-queue ...)
+      ...))
+```
+
+Additional options can be given - see the docstring of
+`with-dead-letter-backoff` for a detailed overview.
+
 ## Lower-Level RabbitMQ API
 
 Kithara wraps the official Java RabbitMQ client - but only as far as necessary
