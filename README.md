@@ -46,11 +46,11 @@ patterns and scenarios.
 
 ### Backoff via Dead-Letter-Queues
 
-The namespace `kithara.patterns.dead-letter-backoff` contains two wrappers
-`with-dead-letter-backoff` and `with-durable-dead-letter-backoff` providing
-delayed requeuing of messages by dispatching them to a secondary queue, the
-"dead letter queue", from which it'll eventually be republished. Both wrappers
-have to be applied after `with-queue`.
+The namespace [`kithara.patterns.dead-letter-backoff`][dead-letter-queues]
+contains two wrappers `with-dead-letter-backoff` and
+`with-durable-dead-letter-backoff` providing delayed requeuing of messages by
+dispatching them to a secondary queue, the "dead letter queue", from which it'll
+eventually be republished. Both wrappers have to be applied after `with-queue`.
 
 The simplest version infers names of additional exchanges/queues using the
 original consumer queue:
@@ -67,6 +67,8 @@ original consumer queue:
 
 Additional options can be given - see the docstring of
 `with-dead-letter-backoff` for a detailed overview.
+
+[dead-letter-queues]: http://xsc.github.io/kithara/kithara.patterns.dead-letter-backoff.html
 
 ## Lower-Level RabbitMQ API
 
