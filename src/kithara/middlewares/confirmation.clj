@@ -47,7 +47,8 @@
       :nack?   (message/nack message)
       :error?  (message/nack message)
       :reject? (message/reject message)
-      nil)))
+      nil)
+    result))
 
 (defn wrap-confirmation
   "Wrap the given function, taking a kithara message map and producing a
