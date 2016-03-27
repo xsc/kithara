@@ -49,7 +49,8 @@ patterns and scenarios.
 The namespace `kithara.patterns.dead-letter-backoff` contains two wrappers
 `with-dead-letter-backoff` and `with-durable-dead-letter-backoff` providing
 delayed requeuing of messages by dispatching them to a secondary queue, the
-"dead letter queue", first. They have to be applied after `with-queue`.
+"dead letter queue", from which it'll eventually be republished. Both wrappers
+have to be applied after `with-queue`.
 
 The simplest version infers names of additional exchanges/queues using the
 original consumer queue:
