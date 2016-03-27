@@ -32,9 +32,7 @@
 
   p/Wrapper
   (wrap-components [this pred wrap-fn]
-    (update this :components p/wrap-components pred wrap-fn))
-  (unwrap [_]
-    components))
+    (update this :components p/wrap-components pred wrap-fn)))
 
 (p/hide-constructors ConnectionWrapper)
 

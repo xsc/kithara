@@ -5,12 +5,10 @@
 ;; ## Wrappers
 
 (defprotocol+ Wrapper
-  "Protocol for wrappers."
+  "Protocol for component wrappers."
   (wrap-components [_ pred wrap-fn]
     "Apply the given function to each value contained within the wrapper
-     matching the given predicate.")
-  (unwrap [_]
-    "Retrieve a seq of all values within the wrapper."))
+     matching the given predicate."))
 
 (extend-protocol Wrapper
   clojure.lang.Sequential
@@ -21,16 +19,12 @@
           (wrap-fn value)
           (wrap-components value pred wrap-fn)))
       this))
-  (unwrap [this]
-    (mapcat unwrap this))
 
   Object
   (wrap-components [this pred wrap-fn]
     (if (pred this)
       (wrap-fn this)
-      this))
-  (unwrap [this]
-    []))
+      this)))
 
 ;; ## Injections
 
