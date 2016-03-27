@@ -2,111 +2,15 @@
   "Implementation of Consumer setup/teardown. Please use via `kithara.core`."
   (:require [kithara.rabbitmq
              [consumer :as consumer]
-             [message :as message]
              [utils :as u]]
+            [kithara.middlewares
+             [logging :refer [wrap-logging]]
+             [confirmation :refer [wrap-confirmation wrap-confirmation-map]]]
             [kithara.protocols :as p]
             [peripheral.core :refer [defcomponent]]
             [clojure.tools.logging :as log]))
 
 ;; ## Logic
-
-(defn- merge-defaults
-  [result default]
-  (if (map? result)
-    (if (some #(contains? result %) [:ack? :nack? :reject? :done?])
-      result
-      (merge default result))
-    default))
-
-(defn- respond-to-message
-  [result _ message]
-  (let [message (cond-> message
-                  (contains? result :requeue?)
-                  (assoc :requeue? (:requeue? result)))]
-    (condp #(get %2 %1) result
-      :done?   nil
-      :ack?    (message/ack message)
-      :nack?   (message/nack message)
-      :reject? (message/reject message)
-      nil))
-  result)
-
-(defn- make-log-tag
-  [result]
-  (condp #(get %2 %1) result
-    :done?   "[done]"
-    :ack?    "[ack]"
-    :nack?   "[nack]"
-    :reject? "[reject]"
-    ""))
-
-(defn- make-log-info
-  [{:keys [exchange routing-key body-raw]}]
-  (format "exchange=%s, routing-key=%s, size=%d"
-          (pr-str exchange)
-          (pr-str routing-key)
-          (alength ^bytes body-raw)))
-
-(defn- write-logs
-  [{:keys [message error] :as result} consumer-name message-data]
-  (let [tag (make-log-tag result)
-        info (make-log-info message-data)]
-    (cond (instance? Throwable error)
-          (log/errorf error
-                      "[%s] %s %s (%s)"
-                      consumer-name
-                      tag
-                      (or message "an exception occured.")
-                      info)
-          (some? error)
-          (log/errorf "[%s] %s %s - %s (%s)"
-                      consumer-name
-                      tag
-                      (or message "an exception occured.")
-                      error
-                      info)
-          (some? message)
-          (log/debugf "[%s] %s %s (%s)" consumer-name tag message info)
-          :else
-          (log/tracef "[%s] %s %s" consumer-name tag info))))
-
-(defn wrap
-  "Wrap the given function, taking a kithara message map, to ACK/NACK/REJECT
-   based on the return value:
-
-   - `{:reject? true, :requeue? <bool>}` -> REJECT (defaults to no requeue),
-   - `{:nack? true, :requeue? <bool>}` -> NACK (defaults to requeue),
-   - `{:ack? true}`-> ACK,
-   - `{:done? true}` -> do nothing (was handled directly).
-
-   Any non-map value (plus those without any of the flags set) will be
-   interpreted as `default`.
-
-   Additionally, the following keys can be given:
-
-   - `:message`: a message to log,
-   - `:error`: an exception to log.
-
-   "
-  [message-handler
-   consumer-name
-   & [{:keys [auto-ack? default error-default]
-       :or {default {:ack? true}
-            error-default {:nack? true}}
-       :as opts}]]
-  (fn [message]
-    (try
-      (-> (try
-            (-> (message-handler message)
-                (merge-defaults default))
-            (catch Throwable t
-              (merge-defaults {:error t} error-default)))
-          (respond-to-message opts message)
-          (write-logs consumer-name message))
-      (catch Throwable t
-        (log/errorf t "[%s] uncaught exception in consumer." consumer-name)))))
-
-;; ## Consumer Tag
 
 (defn- consumer-tag-for
   [consumer-name]
@@ -114,39 +18,61 @@
           consumer-name
           (u/random-string)))
 
-;; ## Component
+(defn- prepare-consumer-tag
+  [{:keys [consumer-name opts]}]
+  (or (:consumer-tag opts)
+      (consumer-tag-for consumer-name)))
+
+(defn- prepare-consumer-options
+  [{:keys [queue-name opts] :as component}]
+  (let [consumer-tag (prepare-consumer-tag component)]
+    (assoc opts
+           :queue-name   queue-name
+           :consumer-tag consumer-tag
+           :auto-ack?    false)))
+
+(defn- prepare-consumer
+  ^com.rabbitmq.client.Consumer
+  [{:keys [handler middlewares consumer-name channel opts]}]
+  (-> handler
+      (wrap-confirmation-map opts)
+      (cond-> middlewares middlewares)
+      (wrap-confirmation opts)
+      (wrap-logging consumer-name)
+      (consumer/from-fn channel opts)))
+
+(defn- log-startup!
+  [{:keys [consumer-name consumer-options]}]
+  (let [{:keys [queue-name consumer-tag]} consumer-options]
+    (log/debugf "[%s] starting consumer on queue %s (desired tag: '%s') ..."
+                consumer-name
+                queue-name
+                consumer-tag)))
 
 (defn- run-consumer!
-  [{:keys [consumer-name channel queue opts impl]}]
-  (let [consumer-tag (or (:consumer-tag opts) (consumer-tag-for consumer-name))
-        opts         (assoc opts
-                            :queue-name   (:queue-name queue)
-                            :consumer-tag consumer-tag
-                            :auto-ack?    false)]
-    (log/debugf "[%s] starting consumer (desired tag: '%s') ..."
-                consumer-name
-                consumer-tag)
-    (consumer/consume channel opts impl)))
+  [{:keys [channel consumer-impl consumer-options] :as component}]
+  (log-startup! component)
+  (consumer/consume channel consumer-options consumer-impl))
 
 (defn- stop-consumer!
   [{:keys [consumer-name]} consumer-value]
   (log/debugf "[%s] stopping consumer ..." consumer-name)
   (consumer/cancel consumer-value))
 
+;; ## Component
+
 (defcomponent BaseConsumer [consumer-name
-                            queue
+                            queue-name
                             channel
+                            middlewares
                             handler
                             opts]
-  :this/as         *this*
-  :assert/queue?   (some? queue)
-  :assert/channel? (some? channel)
-  :impl            (-> handler (wrap consumer-name opts) (consumer/from-fn channel opts))
-  :consumer        (run-consumer! *this*) #(stop-consumer! *this* %)
-
-  p/HasHandler
-  (wrap-handler [this wrap-fn]
-    (update this :handler wrap-fn))
+  :this/as             *this*
+  :assert/queue-name? (string? queue-name)
+  :assert/channel?    (some? channel)
+  :consumer-options   (prepare-consumer-options *this*)
+  :consumer-impl      (prepare-consumer *this*)
+  :consumer           (run-consumer! *this*) #(stop-consumer! *this* %)
 
   p/HasChannel
   (set-channel [this channel]
@@ -154,7 +80,11 @@
 
   p/HasQueue
   (set-queue [this queue]
-    (assoc this :queue queue)))
+    (assoc this :queue-name (:queue-name queue)))
+
+  p/Consumer
+  (add-middleware [this wrap-fn]
+    (update this :middlewares  #(or (some->> % (comp wrap-fn)) wrap-fn))))
 
 (p/hide-constructors BaseConsumer)
 
@@ -166,8 +96,8 @@
    Options:
 
    - `:consumer-name`: the consumer's name,
-   - `:default`: the default result map,
-   - `:error-default`: the exception result map,
+   - `:default-confirmation`: the default confirmation map,
+   - `:error-confirmation`: the confirmation map in case of exception,
    - `:as`: the coercer to use for incoming message bodies,
    - `:consumer-tag`,
    - `:local?`,
@@ -195,9 +125,7 @@
    - `:redelivered?`: whether the message was redelivered,
    - `:delivery-tag`: the message's delivery tag.
 
-   Messages will be confirmed based on the return value of the handler function
-   (with `:error-default` being used on exception and `:default` if an unknown
-   value is encountered):
+   Messages will be confirmed based on the return value of the handler function:
 
    - `{:reject? true, :requeue? <bool>}` -> REJECT (defaults to no requeue),
    - `{:nack? true, :requeue? <bool>}` -> NACK (defaults to requeue),
@@ -205,13 +133,15 @@
    - `{:done? true}` -> do nothing (was handled directly).
 
    Additionally, `:message` (a string) and `:error` (a `Throwable`) keys can be
-   added to trigger a log message."
-  [handler
-   {:keys [consumer-name]
-    :or {consumer-name "kithara"}
-    :as opts}]
-  {:pre [handler]}
-  (map->BaseConsumer
-    {:consumer-name consumer-name
-     :handler       handler
-     :opts          (dissoc opts :consumer-name :auto-ack?)}))
+   added to trigger a log message. See [[wrap-confirmation]] and
+   [[wrap-logging]]."
+  ([handler] (consumer handler {}))
+  ([handler
+    {:keys [consumer-name]
+     :or {consumer-name "kithara"}
+     :as opts}]
+   {:pre [handler]}
+   (map->BaseConsumer
+     {:consumer-name consumer-name
+      :handler       handler
+      :opts          (dissoc opts :consumer-name :auto-ack?)})))
