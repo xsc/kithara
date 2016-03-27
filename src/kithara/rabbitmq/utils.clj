@@ -1,8 +1,8 @@
-(ns kithara.rabbitmq.utils
+(ns ^:no-doc kithara.rabbitmq.utils
   (:require [flake.core :as flake]
             [flake.utils :refer [base62-encode]]))
 
-(defonce __flake-init__
+(defonce ^:private __flake-init__
   (delay (flake/init!)))
 
 (defn random-string

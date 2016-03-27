@@ -8,7 +8,7 @@
 
 ;; ## Protocol
 
-(defprotocol+ Consumable
+(defprotocol+ ^:no-doc Consumable
   (channel [consumable]
     "Return the underlying channel for this consumable.")
   (queue-name [consumable]

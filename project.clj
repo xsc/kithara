@@ -32,7 +32,8 @@
              :codox-rabbitmq
              [:codox
               {:codox {:output-path "doc/rabbitmq"
-                       :namespaces [#"kithara\.rabbitmq\.[a-z\-]+"]}}]}
+                       :namespaces [kithara.config
+                                    #"kithara\.rabbitmq\.[a-z\-]+"]}}]}
   :aliases {"codox"
             ["do"
              "with-profile" "+codox-consumers" "codox,"

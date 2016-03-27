@@ -73,6 +73,8 @@
         (IllegalArgumentException.
           (str "cannot look up key " k " in queue map."))))))
 
+(alter-meta! #'->Queue assoc :private true)
+
 ;; ## Declare
 
 (defn- ->queue

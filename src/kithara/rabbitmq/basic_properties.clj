@@ -3,7 +3,7 @@
 
 ;; ## Keywordize Headers
 
-(defprotocol HeaderValue
+(defprotocol ^:no-doc HeaderValue
   (to-clj [_])
   (to-rmq [_]))
 

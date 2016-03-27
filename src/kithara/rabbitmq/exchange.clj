@@ -16,6 +16,8 @@
         (IllegalArgumentException.
           (str "cannot look up key " k " in exchange map."))))))
 
+(alter-meta! #'->Exchange assoc :private true)
+
 ;; ## Declare
 
 (defn declare
