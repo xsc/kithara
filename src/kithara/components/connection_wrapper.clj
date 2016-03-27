@@ -1,4 +1,4 @@
-(ns kithara.components.connected-consumer
+(ns kithara.components.connection-wrapper
   "Implementation of Connection setup/teardown. Please use via `kithara.core`."
   (:require [kithara.rabbitmq
              [connection :as connection]
@@ -9,14 +9,9 @@
 
 ;; ## Component
 
-(defn- valid-consumers?
-  [consumers]
-  (and (every? p/has-handler? consumers)
-       (every? p/has-connection? consumers)))
-
-(defn- make-consumers
-  [{:keys [consumers connection]}]
-  (p/set-connection consumers connection))
+(defn- prepare-components
+  [{:keys [components connection]}]
+  (p/wrap-connection components connection))
 
 (defn- open-connection
   [data]
@@ -30,17 +25,18 @@
   (connection/close conn)
   nil)
 
-(defcomponent ConnectedConsumer [consumers]
+(defcomponent ConnectionWrapper [components]
   :this/as            *this*
-  :assert/valid?      (valid-consumers? consumers)
   :connection         (open-connection *this*) #(close-connection %)
-  :components/running (make-consumers *this*)
+  :components/running (prepare-components *this*)
 
-  p/HasHandler
-  (wrap-handler [this wrap-fn]
-    (update this :consumers p/wrap-handler wrap-fn)))
+  p/Wrapper
+  (wrap-components [this pred wrap-fn]
+    (update this :components p/wrap-components pred wrap-fn))
+  (unwrap [_]
+    components))
 
-(p/hide-constructors ConnectedConsumer)
+(p/hide-constructors ConnectionWrapper)
 
 ;; ## Wrapper
 
@@ -66,13 +62,13 @@
         :password \"i-am-secret\"}))
    ```
 
-   Note: Consumers have to implement [[HasHandler]] and [[HasConnection]]."
+   Note: `kithara.protocols/set-connection` will be used to inject the
+   connection."
   ([consumers] (with-connection consumers {}))
   ([consumers connection-options]
-   {:pre [(valid-consumers? consumers)]}
-   (map->ConnectedConsumer
+   (map->ConnectionWrapper
      (merge
-       {:consumers       (p/consumer-seq consumers)
+       {:components      (p/consumer-seq consumers)
         :recovery-policy {:backoff {:max 60000}}
         :retry-policy    :always}
        (prepare-connection-options connection-options)))))

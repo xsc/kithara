@@ -2,60 +2,85 @@
   "Basic protocols outlining kithara Components and their Composability."
   (:require [potemkin :refer [defprotocol+]]))
 
-;; ## Protccols
+;; ## Wrappers
 
-(defprotocol+ HasChannel
-  (set-channel [_ channel]))
+(defprotocol+ Wrapper
+  "Protocol for wrappers."
+  (wrap-components [_ pred wrap-fn]
+    "Apply the given function to each value contained within the wrapper
+     matching the given predicate.")
+  (unwrap [_]
+    "Retrieve a seq of all values within the wrapper."))
 
-(defprotocol+ HasQueue
-  (set-queue [_ queue]))
+(extend-protocol Wrapper
+  clojure.lang.Sequential
+  (wrap-components [this pred wrap-fn]
+    (mapv
+      (fn [value]
+        (if (pred value)
+          (wrap-fn value)
+          (wrap-components value pred wrap-fn)))
+      this))
+  (unwrap [this]
+    (mapcat unwrap this))
 
-(defprotocol+ HasConnection
-  (set-connection [_ connection]))
+  Object
+  (wrap-components [this pred wrap-fn]
+    (if (pred this)
+      (wrap-fn this)
+      this))
+  (unwrap [this]
+    []))
 
-(defprotocol+ HasHandler
-  (wrap-handler [_ wrap-fn]))
+;; ## Injections
 
-;; ## Predicates
+;; ### Helper Macro
 
-(defmacro ^:private predicates
-  [& protocols]
-  `(do
-     ~@(for [[protocol f] protocols]
-         `(defn ~f
-            ~(str "Check whether the given `value` implements [[" protocol "]].")
-            [~'value]
-            (satisfies? ~protocol ~'value)))))
+(defmacro ^:private definjection
+  [id [injects] doc]
+  (let [predicate (symbol (str "has-" injects "?"))
+        wrapper (symbol (str "wrap-" injects))
+        setter (symbol (str "set-" injects))]
+    `(do
+       (defprotocol+ ~id
+         ~doc
+         (~setter [~'value ~injects]
+           ""))
+       (defn ~predicate
+         ~(str "Check wheter the given value implements `" id "`.")
+         [~'value]
+         (satisfies? ~id ~'value))
+       (defn ~(with-meta wrapper {:no-doc true})
+         ~(str "Use `wrap-components` to apply `" setter
+               "` to all values implementing `" id "`.")
+         [~'value ~injects]
+         (wrap-components ~'value ~predicate #(~setter % ~injects))))))
 
-(predicates
-  [HasChannel    has-channel?]
-  [HasQueue      has-queue?]
-  [HasHandler    has-handler?]
-  [HasConnection has-connection?])
+;; ### Implementations
 
-;; ## Implement for Seqs
+(definjection HasChannel [channel]
+  "Protocol for components depending on a channel.")
 
-(defmacro ^:private extend-seq
-  [& protocols]
-  `(do
-     ~@(for [[protocol f predicate] protocols]
-         `(do
-            (extend-protocol ~protocol
-              clojure.lang.Sequential
-              (~f [this# val#] (map #(~f % val#) this#)))
-            (defn ~(symbol (str "maybe-" f))
-              [~'value ~'arg]
-              (if (sequential? ~'value)
-                (mapv #(~(symbol (str "maybe-" f)) % ~'arg) ~'value)
-                (if (and (satisfies? ~protocol ~'value) ~'arg)
-                  (~f ~'value ~'arg)
-                  ~'value)))))))
+(definjection HasConnection [connection]
+  "Protocol for components depending on a connection.")
 
-(extend-seq
-  [HasChannel    set-channel]
-  [HasQueue      set-queue]
-  [HasHandler    wrap-handler]
-  [HasConnection set-connection])
+(definjection HasQueue [queue]
+  "Protocol for components depending on a queue.")
+
+;; ## Consumer
+
+(defprotocol+ Consumer
+  "Protocol for consumers."
+  (add-middleware [_ wrap-fn]
+    "Wrap the consumer handler function using the given `wrap-fn`."))
+
+(defn consumer?
+  [value]
+  (satisfies? Consumer value))
+
+(defn wrap-middleware
+  [value wrap-fn]
+  (wrap-components value consumer? #(add-middleware % wrap-fn)))
 
 ;; ## Coercer
 

@@ -105,5 +105,6 @@
       (handleRecoverOk [_ _])
       (handleShutdownSignal [_ _ _])
       (handleDelivery [_ consumer-tag envelope properties body]
-        (let [message (message/build channel envelope properties body opts)]
+        (let [message (-> (message/build channel envelope properties body opts)
+                          (assoc :consumer-tag consumer-tag))]
           (f message))))))

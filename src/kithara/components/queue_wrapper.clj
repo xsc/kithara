@@ -1,4 +1,4 @@
-(ns kithara.components.queue-consumer
+(ns kithara.components.queue-wrapper
   "Implementation of Queue setup/teardown. Please use via `kithara.core`."
   (:require [kithara.rabbitmq
              [queue :as queue]
@@ -32,12 +32,9 @@
   (doto (declare-queue opts)
     (bind-queue opts)))
 
-(defn- make-consumers
-  [{:keys [consumers connection channel queue]}]
-  (-> consumers
-      (p/set-queue queue)
-      (p/maybe-set-channel channel)
-      (p/maybe-set-connection connection)))
+(defn- prepare-components
+  [{:keys [components queue]}]
+  (p/wrap-queue components queue))
 
 (defn- open-channel
   [{:keys [channel connection]}]
@@ -51,37 +48,30 @@
 
 ;; ## Component
 
-(defn- valid-consumers?
-  [consumers]
-  (and (every? p/has-handler? consumers)
-       (every? p/has-queue? consumers)))
-
-(defcomponent QueueConsumer [consumers
-                             channel
-                             connection
-                             queue-name
-                             bindings
-                             declare-queue?]
+(defcomponent QueueWrapper [components
+                            connection
+                            queue-name
+                            bindings
+                            declare-queue?]
   :this/as            *this*
   :assert/connection? (some? connection)
-  :assert/valid?      (valid-consumers? consumers)
   :declare-channel    (open-channel *this*) #(close-channel *this* %)
   :queue              (make-queue *this*)
-  :components/running (make-consumers *this*)
+  :components/running (prepare-components *this*)
 
-  p/HasHandler
-  (wrap-handler [this wrap-fn]
-    (update this :consumers p/wrap-handler wrap-fn))
-
-  p/HasChannel
-  (set-channel [this channel]
-    (assoc this :channel channel))
+  p/Wrapper
+  (wrap-components [this pred wrap-fn]
+    (update this :components p/wrap-components pred wrap-fn))
+  (unwrap [_]
+    components)
 
   p/HasConnection
   (set-connection [this connection]
-    (assoc this :connection connection)))
+    (-> this
+        (assoc :connection connection)
+        (update :components p/wrap-connection connection))))
 
-(p/hide-constructors QueueConsumer)
+(p/hide-constructors QueueWrapper)
 
 ;; ## Wrapper
 
@@ -116,15 +106,14 @@
   ([consumers queue-name]
    (with-queue consumers queue-name {:declare-queue? false}))
   ([consumers queue-name queue-options & more-bindings]
-   {:pre [(valid-consumers? consumers)
-          (string? queue-name)]}
+   {:pre [(string? queue-name)]}
    (let [bindings (concat
                     (when (contains? queue-options :exchange)
                       [(select-keys queue-options [:exchange :routing-keys])])
                     more-bindings)]
-     (map->QueueConsumer
+     (map->QueueWrapper
        (merge
-         {:consumers      (p/consumer-seq consumers)
+         {:components     (p/consumer-seq consumers)
           :queue-name     queue-name
           :declare-queue? true
           :bindings       bindings}
@@ -167,8 +156,7 @@
    implement [[HasChannel]] and [[HasConnection]] to receive a channel/connection
    if associated with this queue."
   [consumers & bindings]
-  {:pre [(valid-consumers? consumers)]}
-  (map->QueueConsumer
-    {:consumers      (p/consumer-seq consumers)
+  (map->QueueWrapper
+    {:components    (p/consumer-seq consumers)
      :declare-queue? true
      :bindings       bindings}))
