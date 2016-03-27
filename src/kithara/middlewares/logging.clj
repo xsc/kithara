@@ -2,14 +2,19 @@
   (:require [clojure.tools.logging :as log]))
 
 (defn- make-log-tag
-  [result]
-  (condp #(get %2 %1) result
-    :done?   "[done]"
-    :ack?    "[ack]"
-    :nack?   "[nack]"
-    :reject? "[reject]"
-    :error?  "[error]"
-    ""))
+  [consumer-name result {:keys [consumer-tag]}]
+  (str
+    "[" consumer-name "]"
+    (when consumer-tag
+      (str " [" consumer-tag "]"))
+    (some->> (condp #(get %2 %1) result
+               :done?   "[done]"
+               :ack?    "[ack]"
+               :nack?   "[nack]"
+               :reject? "[reject]"
+               :error?  "[error]"
+               nil)
+             (str " "))))
 
 (defn- make-log-info
   [{:keys [exchange routing-key body-raw]}]
@@ -20,30 +25,33 @@
 
 (defn- write-logs
   [{:keys [message error] :as result} consumer-name message-data]
-  (let [tag (make-log-tag result)
+  (let [tag (make-log-tag consumer-name result message-data)
         info (make-log-info message-data)]
     (cond (instance? Throwable error)
           (log/errorf error
-                      "[%s] %s %s (%s)"
-                      consumer-name
+                      "%s %s (%s)"
                       tag
                       (or message "an exception occured.")
                       info)
           (some? error)
-          (log/errorf "[%s] %s %s - %s (%s)"
-                      consumer-name
+          (log/errorf "%s %s - %s (%s)"
                       tag
                       (or message "an exception occured.")
                       error
                       info)
           (some? message)
-          (log/debugf "[%s] %s %s (%s)" consumer-name tag message info)
+          (log/debugf "%s %s (%s)" tag message info)
           :else
-          (log/tracef "[%s] %s %s" consumer-name tag info))))
+          (log/debug tag info))))
 
 (defn wrap-logging
   "Wrap the given function, taking a kithara message map and producing a
-   confirmation map, to log messages on error/exceptions.
+   confirmation map, to log messages on error/exceptions. The message
+   will have the following format:
+
+   ```
+   [<consumer-name>] [<consumer-tag>] [<status>] ... details ...
+   ```
 
    This is a middleware activated by default in the kithara base consumer."
   [message-handler consumer-name]
