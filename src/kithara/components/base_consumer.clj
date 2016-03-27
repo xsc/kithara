@@ -36,7 +36,7 @@
   ^com.rabbitmq.client.Consumer
   [{:keys [handler middlewares consumer-name channel opts]}]
   (-> handler
-      (wrap-confirmation-map opts)
+      (wrap-confirmation-defaults opts)
       (cond-> middlewares middlewares)
       (wrap-confirmation opts)
       (wrap-logging consumer-name)
