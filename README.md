@@ -48,6 +48,14 @@ the `kithara.rabbitmq.*` namespaces as outlined in the respective
 
 [rabbitmq-docs]: http://xsc.github.io/kithara/rabbitmq/index.html
 
+## Contributing
+
+Contributions are always welcome!
+
+1. Create a new branch where you apply your changes (ideally also adding tests).
+2. Make sure existing tests are passing.
+3. Open a Pull Request on Github.
+
 ## License
 
 ```
