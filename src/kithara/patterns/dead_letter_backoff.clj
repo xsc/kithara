@@ -5,6 +5,7 @@
              [queue :as queue]
              [utils :as u]]
             [kithara.protocols :as p]
+            [clojure.tools.logging :as log]
             [peripheral.core :refer [defcomponent]]))
 
 ;; ## Naming
@@ -135,10 +136,19 @@
         (assoc :redelivered? true))
     message))
 
+(defn- normalize-result
+  [result]
+  (or result
+      (log/warn
+        "[kithara] when using dead letter backoff the handler function"
+        "returning `nil` will be interpreted as ACK.")
+      {:ack? true}))
+
 (defn- handle-with-backoff
   [component handler message]
   (let [message' (normalize-retried-message message)
-        {:keys [done? nack? reject?] :as result} (handler message')
+        result (-> message' handler normalize-result)
+        {:keys [done? nack? reject?]} result
         requeue? (get result :requeue? nack?)]
     (if-not done?
       (if (and (or nack? reject?) requeue?)
@@ -148,57 +158,42 @@
         result)
       result)))
 
-(defn- make-consumers
-  [{:keys [consumers connection channel consumer-queue] :as component}]
-  (-> consumers
-      (p/wrap-handler
-        (fn [handler]
-          #(handle-with-backoff component handler %)))
-      (p/set-queue consumer-queue)
-      (p/maybe-set-connection connection)
-      (p/maybe-set-channel channel)))
+(defn- prepare-components
+  [{:keys [components] :as component}]
+  (p/wrap-middleware
+    components
+    (fn [handler]
+      #(handle-with-backoff component handler %))))
 
 ;; ## Component
 
-(defn- valid-consumers?
-  [consumers]
-  (and (every? p/has-handler? consumers)
-       (every? p/has-queue? consumers)))
-
-(defcomponent DLXConsumer [consumers
-                           connection
-                           channel
+(defcomponent DLXConsumer [components
                            consumer-queue
                            backoff-exchange
                            retry-exchange
                            queue]
   :this/as               *this*
-  :assert/valid?         (valid-consumers? consumers)
   :backoff-exchange-name (make-backoff-exchange-name *this*)
   :retry-exchange-name   (make-retry-exchange-name *this*)
   :queue-name            (make-dead-letter-queue-name *this*)
   :dead-letter-output    (declare-retry-exchange! *this*)
   :dead-letter-input     (declare-backoff-exchange! *this*)
   :dead-letter-queue     (declare-queue! *this*)
-  :components/running    (make-consumers *this*)
+  :components/running    (prepare-components *this*)
 
   :on/started (bind-queues! *this*)
 
-  p/HasHandler
-  (wrap-handler [this wrap-fn]
-    (update this :consumers p/wrap-handler wrap-fn))
-
-  p/HasChannel
-  (set-channel [this channel]
-    (assoc this :channel channel))
-
-  p/HasConnection
-  (set-connection [this connection]
-    (assoc this :connection connection))
+  p/Wrapper
+  (wrap-components [this pred wrap-fn]
+    (update this :components p/wrap-components pred wrap-fn))
+  (unwrap [_]
+    components)
 
   p/HasQueue
   (set-queue [this queue]
-    (assoc this :consumer-queue queue)))
+    (-> this
+        (assoc :consumer-queue queue)
+        (update :components p/wrap-queue queue))))
 
 (p/hide-constructors DLXConsumer)
 
@@ -228,7 +223,7 @@
 ;; ## Wrapper
 
 (defn with-dead-letter-backoff
-  "Wrap the given consumer(s) with setup of dead letter queues and exchanges.
+  "Wrap the given component(s) with setup of dead letter queues and exchanges.
    The following options can be given:
 
    - `:queue`: options for the dead letter queue (including `:queue-name`,
@@ -255,8 +250,6 @@
            ...)
          ...))
    ```
-
-   Note: Consumers have to implement [[HasHandler]] and [[HasQueue]].
 
    __Topology__
 
@@ -310,10 +303,9 @@
    to be republished.
 
    See: https://www.rabbitmq.com/ttl.html"
-  [consumers & [{:keys [backoff-exchange retry-exchange queue]}]]
-  {:pre [(valid-consumers? consumers)]}
+  [components & [{:keys [backoff-exchange retry-exchange queue]}]]
   (map->DLXConsumer
-    {:consumers        (p/consumer-seq consumers)
+    {:components       (p/consumer-seq components)
      :backoff-exchange (as-exchange-map backoff-exchange)
      :retry-exchange   (as-exchange-map retry-exchange)
      :queue            (as-queue-map queue)}))
@@ -324,11 +316,10 @@
 
    Note that this makes only sense if the original consumer queue has the same
    properties, since otherwise you'll lose dead-lettered messages on retry."
-  [consumers & [{:keys [backoff-exchange retry-exchange queue]}]]
-  {:pre [(valid-consumers? consumers)]}
+  [components & [{:keys [backoff-exchange retry-exchange queue]}]]
   (let [durify #(merge % {:durable? true, :exclusive? false, :auto-delete? false})]
     (map->DLXConsumer
-      {:consumers        (p/consumer-seq consumers)
+      {:components       (p/consumer-seq components)
        :backoff-exchange (durify (as-exchange-map backoff-exchange))
        :retry-exchange   (durify (as-exchange-map retry-exchange))
        :queue            (durify (as-queue-map queue))})))
