@@ -4,8 +4,9 @@
              [consumer :as consumer]
              [utils :as u]]
             [kithara.middlewares
-             [logging :refer [wrap-logging]]
-             [confirmation :refer [wrap-confirmation wrap-confirmation-map]]]
+             [confirmation :refer [wrap-confirmation]]
+             [confirmation-defaults :refer [wrap-confirmation-defaults]]
+             [logging :refer [wrap-logging]]]
             [kithara.protocols :as p]
             [peripheral.core :refer [defcomponent]]
             [clojure.tools.logging :as log]))
