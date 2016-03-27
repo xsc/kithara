@@ -40,8 +40,8 @@
          ~doc
          (~setter [~'value ~injects]
            ""))
-       (defn ~predicate
-         ~(str "Check wheter the given value implements `" id "`.")
+       (defn ~(with-meta predicate {:no-doc true})
+         ~(str "Check wheter the given value implements [[" id "]].")
          [~'value]
          (satisfies? ~id ~'value))
        (defn ~(with-meta wrapper {:no-doc true})
@@ -68,11 +68,12 @@
   (add-middleware [_ wrap-fn]
     "Wrap the consumer handler function using the given `wrap-fn`."))
 
-(defn consumer?
+(defn ^:no-doc consumer?
+  "Check whether the given value implements [[Consumer]]."
   [value]
   (satisfies? Consumer value))
 
-(defn wrap-middleware
+(defn ^:no-doc wrap-middleware
   [value wrap-fn]
   (wrap-components value consumer? #(add-middleware % wrap-fn)))
 

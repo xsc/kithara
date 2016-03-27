@@ -22,5 +22,6 @@
                            :namespaces [kithara.core
                                         kithara.config
                                         kithara.protocols
-                                        #"^kithara\.patterns\.[a-z\-]+"]}}}
+                                        #"^kithara\.patterns\.[a-z\-]+"
+                                        #"^kithara\.middlewares\.[a-z\-]+"]}}}
   :pedantic? :abort)
