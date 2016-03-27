@@ -110,7 +110,7 @@
    The following values are valid for `:as`:
 
    - `:bytes` (default),
-   - `:string` (== `:utf8-string`),
+   - `:string`
    - any function taking the raw byte array as input,
    - any value implementing [[kithara.protocols/Coercer]].
 
