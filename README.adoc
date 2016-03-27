@@ -12,14 +12,14 @@ thus source of its limitations - is the simple creation of RabbitMQ-based
 If you're looking for a more complete RabbitMQ library you should check out
 https://github.com/michaelklishin/langohr[langohr].
 
+== Table of Contents
+
+toc::[]
+
 [[usage]]
 == Usage
 
 Coming soon.
-
-== Table of Contents
-
-toc::[]
 
 [[quickstart]]
 === Quickstart
