@@ -1,24 +1,31 @@
-# kithara [![Build Status](https://travis-ci.org/xsc/kithara.svg?branch=master)](https://travis-ci.org/xsc/kithara)
+[[kithara]]
+= kithara image:https://travis-ci.org/xsc/kithara.svg?branch=master["Build Status", link="https://travis-ci.org/xsc/kithara"]
+:toc: macro
+:toc-title:
+:toclevels: 3
 
-__kithara__ is a (limited) [RabbitMQ][rabbitmq] client for Clojure, based on
-[Lyra][lyra]. Its specific scope - and thus source of its limitations - is the
-simple creation of RabbitMQ-based consumers with appropriate recovery and retry
-facilities.
+*kithara* is a (limited) https://www.rabbitmq.com[RabbitMQ] client for Clojure,
+based on https://github.com/jhalterman/lyra[Lyra]. Its specific scope - and
+thus source of its limitations - is the simple creation of RabbitMQ-based
+ consumers with appropriate recovery and retry facilities.
 
 If you're looking for a more complete RabbitMQ library you should check out
-[langohr][langohr].
+https://github.com/michaelklishin/langohr[langohr].
 
-[rabbitmq]: https://www.rabbitmq.com
-[lyra]: https://github.com/jhalterman/lyra
-[langohr]: https://github.com/michaelklishin/langohr
+== Table of Contents
 
-## Usage
+toc::[]
+
+[[usage]]
+== Usage
 
 Coming soon.
 
-### Quickstart
+[[quickstart]]
+=== Quickstart
 
-```clojure
+[source,clojure]
+----
 (require '[kithara.core :as rabbitmq]
          '[com.stuartsierra.component :as component])
 
@@ -37,16 +44,18 @@ Coming soon.
         {:host "rabbitmq.my-cluster.com"})))
 
 (alter-var-root #'rabbitmq-consumer component/start)
-```
+----
 
-## Common Messaging Patterns
+[[common-messaging-patterns]]
+== Common Messaging Patterns
 
 Kithara aims to provide easily usable implementations for common messaging
 patterns and scenarios.
 
-### Backoff via Dead-Letter-Queues
+[[dead-letter-backoff]]
+=== Backoff via Dead-Letter-Queues
 
-The namespace [`kithara.patterns.dead-letter-backoff`][dead-letter-queues]
+The namespace http://xsc.github.io/kithara/kithara.patterns.dead-letter-backoff.html[`kithara.patterns.dead-letter-backoff`]
 contains two wrappers `with-dead-letter-backoff` and
 `with-durable-dead-letter-backoff` providing delayed requeuing of messages by
 dispatching them to a secondary queue, the "dead letter queue", from which it'll
@@ -55,7 +64,8 @@ eventually be republished. Both wrappers have to be applied after `with-queue`.
 The simplest version infers names of additional exchanges/queues using the
 original consumer queue:
 
-```clojure
+[source,clojure]
+----
 (require '[kithara.patterns.dead-letter-backoff :as dlx])
 
 (defonce rabbitmq-consumer-with-backoff
@@ -63,23 +73,21 @@ original consumer queue:
       (dlx/with-dead-letter-backoff)
       (rabbitmq/with-queue ...)
       ...))
-```
+----
 
 Additional options can be given - see the docstring of
 `with-dead-letter-backoff` for a detailed overview.
 
-[dead-letter-queues]: http://xsc.github.io/kithara/kithara.patterns.dead-letter-backoff.html
-
-## Lower-Level RabbitMQ API
+[[lower-level-api]]
+== Lower-Level RabbitMQ API
 
 Kithara wraps the official Java RabbitMQ client - but only as far as necessary
 to build consumers (and patterns). You can access those functions using
 the `kithara.rabbitmq.*` namespaces as outlined in the respective
-[auto-generated documentation][rabbitmq-docs].
+http://xsc.github.io/kithara/rabbitmq/index.html[auto-generated documentation].
 
-[rabbitmq-docs]: http://xsc.github.io/kithara/rabbitmq/index.html
-
-## Contributing
+[[contributing]]
+== Contributing
 
 Contributions are always welcome!
 
@@ -87,9 +95,10 @@ Contributions are always welcome!
 2. Make sure existing tests are passing.
 3. Open a Pull Request on Github.
 
-## License
+[[license]]
+== License
 
-```
+....
 The MIT License (MIT)
 
 Copyright (c) 2016 Yannick Scherer
@@ -111,4 +120,4 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-```
+....
