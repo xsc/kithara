@@ -39,6 +39,15 @@ Coming soon.
 (alter-var-root #'rabbitmq-consumer component/start)
 ```
 
+## Lower-Level RabbitMQ API
+
+Kithara wraps the official Java RabbitMQ client - but only as far as necessary
+to build consumers (and patterns). You can access those functions using
+the `kithara.rabbitmq.*` namespaces as outlined in the respective
+[auto-generated documentation][rabbitmq-docs].
+
+[rabbitmq-docs]: http://xsc.github.io/kithara/rabbitmq/index.html
+
 ## License
 
 ```
