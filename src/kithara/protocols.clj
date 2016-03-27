@@ -79,18 +79,46 @@
 
 ;; ## Coercer
 
+;; ### Aliases
+
+(defmulti coerce-by-keyword
+  "Coerce the given byte array using the given, predefined coercer."
+  {:arglists '([alias body])}
+  (fn [k _]
+    k)
+  :default nil)
+
+(defmethod coerce-by-keyword nil
+  [k _]
+  (throw
+    (IllegalArgumentException.
+      (str "unknown coercion alias:" k))))
+
+(defmethod coerce-by-keyword :bytes
+  [_ body]
+  body)
+
+(defmethod coerce-by-keyword :string
+  [_ ^bytes body]
+  (String. body "UTF-8"))
+
+;; ### Protocol
+
 (defprotocol+ Coercer
-  (coerce [_ ^bytes body]))
+  "Protocol for byte array coercion. This is already implemented for:
+
+   - the keyword `:bytes` (returns the original byte array)
+   - the keyword `:string` (returns the byte array as a UTF-8 string)
+   - `clojure.lang.AFn` (applies the function to the byte array).
+
+   You can implement the multimethod [[coerce-by-keyword]] to add more aliases."
+  (coerce [coercer ^bytes body]
+    "Coerce the given byte array using the given coercer."))
 
 (extend-protocol Coercer
   clojure.lang.Keyword
   (coerce [k body]
-    (case k
-      :bytes                 body
-      (:string :utf8-string) (String. ^bytes body "UTF-8")
-      (throw
-        (IllegalArgumentException.
-          (str "unknown coercion target: " k)))))
+    (coerce-by-keyword k body))
 
   clojure.lang.AFn
   (coerce [f body]
