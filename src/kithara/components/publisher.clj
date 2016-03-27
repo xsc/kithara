@@ -24,7 +24,6 @@
   :connection (open-connection options) #(close-connection %)
   :channel    (channel/open connection) #(channel/close %)
 
-  p/HasHandler
   p/HasConnection
   (set-connection [this connection]
     (assoc this :connection connection))
