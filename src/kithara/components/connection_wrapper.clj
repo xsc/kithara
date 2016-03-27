@@ -60,8 +60,7 @@
         :password \"i-am-secret\"}))
    ```
 
-   Note: `kithara.protocols/set-connection` will be used to inject the
-   connection."
+   Note: [[set-connection]] will be used to inject the connection."
   ([consumers] (with-connection consumers {}))
   ([consumers connection-options]
    (map->ConnectionWrapper

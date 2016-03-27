@@ -45,8 +45,9 @@
    - `:prefetch-global?`
 
    If no options are given, a channel with server-side default settings will
-   be set up. `kithara.protocols/wrap` and `kithara.protocols/set-channel` will
-   be used to inject the channel."
+   be set up.
+
+   Note: [[set-channel]] will be used to inject the channel."
   ([consumers] (with-channel consumers {}))
   ([consumers channel-options]
    (map->ChannelWrapper

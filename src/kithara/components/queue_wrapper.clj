@@ -100,7 +100,7 @@
        {:exchange \"other\", :routing-keys [\"*.message\"]}))
    ```
 
-   Note: Consumers have to implement [[HasHandler]] and [[HasQueue]]."
+   Note: [[set-queue]] will be used to inject the queue."
   ([consumers queue-name]
    (with-queue consumers queue-name {:declare-queue? false}))
   ([consumers queue-name queue-options & more-bindings]
@@ -150,9 +150,7 @@
        {:exchange \"exchange\", :routing-keys [\"#\"]}))
    ```
 
-   Note: Consumers have to implement [[HasHandler]] and [[HasQueue]]. They may
-   implement [[HasChannel]] and [[HasConnection]] to receive a channel/connection
-   if associated with this queue."
+   Note: [[set-queue]] will be used to inject the queue."
   [consumers & bindings]
   (map->QueueWrapper
     {:components    (p/consumer-seq consumers)
