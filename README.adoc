@@ -179,11 +179,6 @@ You can thus either set the consumer tag explicitly (using the `:consumer-tag`
 option) or you can give your consumer a name (`:consumer-name`) that will be
 included in a custom, unique consumer tag chosen by kithara.
 
-==== Low-Level Options
-
-The options `:local?`, `:exclusive?` and `:arguments` refer to the respective
-parameters in RabbitMQ's `basic.consume`.
-
 [[channels]]
 === Channels
 
