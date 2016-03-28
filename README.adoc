@@ -219,10 +219,9 @@ exchange/routing-key pairs. It can be easily set up:
    :routing-keys ["#"]})
 ----
 
-If no options (see documentation) are given, the queue will not be actively
-declared but expected to already exist.
-
-There are shorthands for commonly used queue types like
+If no options are given, the queue will not be actively declared but expected
+to already exist. Note that there are shorthands for commonly used queue types
+like
 http://xsc.github.io/kithara/kithara.core.html#var-with-server-named-queue[`with-server-named-queue`]
 and
 http://xsc.github.io/kithara/kithara.core.html#var-with-durable-queue[`with-durable-queue`].
