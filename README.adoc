@@ -210,19 +210,107 @@ that:
 (kithara.core/with-prefetch-channel base-consumer prefetch-count)
 ----
 
-Note that, just like all the other kithara wrapper functions, `with-channel`
-can be fed with a _seq_ of consumers - meaning that 3 threads consuming from
-the same channel can be set up as simply as specifying:
+==== Multiple Consumers
+
+Just like all the other kithara wrapper functions, `with-channel` can be fed
+with a _seq_ of consumers - meaning that 3 threads consuming from the same
+channel can be set up as simply as specifying:
 
 [source,clojure]
 ----
 (kithara.core/with-channel (repeat 3 base-consumer) ...)
 ----
 
-But the rule usually is: one channel per thread.
+But also note that the rule usually is: one channel per thread.
 
 [[queues]]
 === Queues
+
+Consumers need a queue to receive messages from and that queue is bound to
+exchange/routing-key pairs. It can be easily set up:
+
+[source,clojure]
+----
+(kithara.core/with-queue consumer "queue-name")
+(kithara.core/with-queue
+   consumer
+  "queue-name"
+  {... options ...}
+  ... bindings ...)
+----
+
+If no options are given, the queue will not be actively declared but expected
+to already exist.
+
+Options map closely to RabbitMQ's `queue.declare`:
+
+- `:durable?`
+- `:exclusive?`
+- `:auto-delete?`
+- `:declare-arguments`
+
+Bindings are given as maps of `:exchange` and `:routing-keys` and can be merged
+into the options if there is only one exchange to consume from.
+
+==== Multiple Consumers
+
+Just like all the other kithara wrapper functions, `with-queue` can be fed with
+a _seq_ of consumers - meaning that 3 consumers receiving messages from the
+same queue can be set up as simply as specifying:
+
+[source,clojure]
+----
+(kithara.core/with-queue (repeat 3 consumer) ...)
+----
+
+Note that whether consumers share a channel or use their own depends on how
+<<channels,`with-channel`> is nested.
+
+The following will reuse the same channel for each consumer:
+
+[source,clojure]
+----
+(kithara.core/with-queue
+  (kithara.core/with-channel
+    (repeat 3 consumer)
+    ....)
+  ...)
+----
+
+While this version will create a single channel for each one:
+
+[source,clojure]
+----
+(kithara.core/with-queue
+  (repeat 3 (kithara.core/with-channel
+              consumer
+              ....))
+  ...)
+----
+
+==== Durable Queues
+
+Durable queues, i.e. setting options appropriately, can be created via:
+
+[source,clojure]
+----
+(kithara.core/with-durable-queue consumer "queue-name")
+(kithara.core/with-durable-queue
+  consumer
+  "queue-name"
+  {... options ...}
+  ... bindings ...)
+----
+
+==== Server-Named Queues
+
+You can use the following to create a non-durable, exclusive, auto-deleted
+queue:
+
+[source,clojure]
+----
+(kithara.core/with-server-named-queue consumer ... bindings ...)
+----
 
 [[common-messaging-patterns]]
 == Common Messaging Patterns
