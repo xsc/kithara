@@ -46,6 +46,47 @@ Coming soon.
 (alter-var-root #'rabbitmq-consumer component/start)
 ----
 
+[[building-a-consumer]]
+== Building a Consumer
+
+kithara is basically a toolbox with components handling RabbitMQ connection,
+channel and queue setup. Here you'll see how to combine them.
+
+[[building-the-handler]]
+=== Handler
+
+A handler is a function. It takes a single map (the message) and produces
+another map (the confirmation) specifying how to react to the message, i.e.
+whether to `ACK`, `NACK` or `REJECT` it.
+
+==== Message Format
+
+This is an example message:
+
+[source,clojure]
+----
+{:channel      #object[com.sun.proxy.$Proxy1 0x17cd517c "net.jodah.lyra.config.Config@190abc2d"],
+ :body         #object["[B" 0x13d05618 "[B@13d05618"],
+ :body-raw     #object["[B" 0x13d05618 "[B@13d05618"],
+ :properties   {...},
+ :routing-key  "the-routing-key",
+ :exchange     "the-exchange",
+ :redelivered? false,
+ :delivery-tag 33,
+ :consumer-tag "kithara:96CDgYbID9a1IlDwDS"}
+----
+
+Most of the semantics should be clear, so just a few notes:
+
+- `:body-raw` always contains a byte array with the raw payload.
+- `:body` contains a potentially preprocessed payload (see Message Coercion),
+  otherwise it's identical to `:body-raw`.
+- `:properties` represents the message's https://www.rabbitmq.com/releases/rabbitmq-java-client/v3.6.1/rabbitmq-java-client-javadoc-3.6.1/com/rabbitmq/client/AMQP.BasicProperties.html[`BasicProperties`].
+
+==== Confirmation Format
+
+TODO
+
 [[common-messaging-patterns]]
 == Common Messaging Patterns
 
