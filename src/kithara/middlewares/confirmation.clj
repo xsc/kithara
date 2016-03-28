@@ -1,29 +1,39 @@
 (ns kithara.middlewares.confirmation
   (:require [kithara.rabbitmq.message :as message]))
 
+(defn- unknown-status!
+  [confirmation message]
+  (message/nack message)
+  {:status  :error
+   :message (str "invalid confirmation:" (pr-str confirmation)) })
+
 (defn- confirm-message!
-  [message result]
+  [message confirmation]
   (let [message (cond-> message
-                  (contains? result :requeue?)
-                  (assoc :requeue? (:requeue? result)))]
-    (condp #(get %2 %1) result
-      :done?   nil
-      :ack?    (message/ack message)
-      :nack?   (message/nack message)
-      :error?  (message/nack message)
-      :reject? (message/reject message)
-      nil)
-    result))
+                  (contains? confirmation :requeue?)
+                  (assoc :requeue? (:requeue? confirmation)))]
+    (case (:status confirmation)
+      :done   nil
+      :ack    (message/ack message)
+      :nack   (message/nack message)
+      :error  (message/nack message)
+      :reject (message/reject message)
+      (unknown-status! confirmation message))
+    confirmation))
 
 (defn wrap-confirmation
   "Wrap the given function, taking a kithara message map and producing a
    confirmation map, to ACK/NACK/REJECT the original message based on keys
-   contained within:
+   contained within. `:status` can have any of the following values:
 
-   - `{:reject? true, :requeue? <bool>}` -> REJECT (defaults to no requeue),
-   - `{:nack? true, :requeue? <bool>}` -> NACK (defaults to requeue),
-   - `{:ack? true}`-> ACK,
-   - `{:done? true}` -> do nothing (was handled directly).
+   - `:ack`
+   - `:nack`
+   - `:reject`
+   - `:error` (an uncaught exception occured)
+   - `:done` (do nothing since the message was already explicitly handled)
+
+   For `:nack`, `:reject` and `:error`, an additional key `:requeue?` can
+   be given to indicate whether or not the message should be requeued.
 
    This is a middleware activated by default in the kithara base consumer."
   [message-handler _]
@@ -32,6 +42,6 @@
       (->> (message-handler message)
            (confirm-message! message))
       (catch Throwable t
-        {:error?  true
+        {:status  :error
          :message "when confirming message."
          :error   t}))))

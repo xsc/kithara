@@ -126,12 +126,17 @@
    - `:redelivered?`: whether the message was redelivered,
    - `:delivery-tag`: the message's delivery tag.
 
-   Messages will be confirmed based on the return value of the handler function:
+   Messages will be confirmed based on the return value of the handler function,
+   a map providing a `:status` key having one of the following values:
 
-   - `{:reject? true, :requeue? <bool>}` -> REJECT (defaults to no requeue),
-   - `{:nack? true, :requeue? <bool>}` -> NACK (defaults to requeue),
-   - `{:ack? true}`-> ACK,
-   - `{:done? true}` -> do nothing (was handled directly).
+   - `:ack`
+   - `:nack`
+   - `:reject`
+   - `:error` (an uncaught exception occured)
+   - `:done` (do nothing since the message was already explicitly handled)
+
+   For `:nack`, `:reject` and `:error`, the key `:requeue?` can be given to
+   indicate whether or not the message should be requeued.
 
    Additionally, `:message` (a string) and `:error` (a `Throwable`) keys can be
    added to trigger a log message. See [[wrap-confirmation]] and

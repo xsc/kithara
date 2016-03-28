@@ -142,16 +142,16 @@
       (log/warn
         "[kithara] when using dead letter backoff the handler function"
         "returning `nil` will be interpreted as ACK.")
-      {:ack? true}))
+      {:status :ack}))
 
 (defn- handle-with-backoff
   [component handler message]
   (let [message' (normalize-retried-message message)
         result (-> message' handler normalize-result)
-        {:keys [done? nack? reject?]} result
-        requeue? (get result :requeue? nack?)]
-    (if-not done?
-      (if (and (or nack? reject?) requeue?)
+        {:keys [status]} result
+        requeue? (get result :requeue? (= status :nack))]
+    (if-not (= status :done)
+      (if (and (contains? #{:nack :reject} status) requeue?)
         (do
           (publish-dead-message! component message)
           (assoc result :requeue? false))

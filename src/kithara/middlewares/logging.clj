@@ -7,14 +7,9 @@
     "[" consumer-name "]"
     (when consumer-tag
       (str " [" consumer-tag "]"))
-    (some->> (condp #(get %2 %1) result
-               :done?   "[done]"
-               :ack?    "[ack]"
-               :nack?   "[nack]"
-               :reject? "[reject]"
-               :error?  "[error]"
-               nil)
-             (str " "))))
+    (some->> (:status result)
+             (name)
+             (format " [%s]"))))
 
 (defn- make-log-info
   [{:keys [exchange routing-key body-raw]}]
@@ -62,4 +57,4 @@
         result)
       (catch Throwable t
         (log/errorf t "uncaught error in message handler.")
-        {:error? true, :error t}))))
+        {:status :error, :error t}))))

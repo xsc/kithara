@@ -88,19 +88,19 @@
           error<?  (promise)
           handler
           (fn [{:keys [routing-key redelivered?] :as message}]
-            (case [routing-key redelivered?]
-              ["reject" false]
-              (do (deliver reject<? true) {:reject? true})
-              ["ack" false]
-              (do (deliver ack<? true) {:ack? true})
-              ["nack" false]
-              (do (deliver nack<? true) {:nack? true})
-              ["nack" true]
-              (do (deliver renack<? true) {:ack? true})
-              ["error" false]
-              (throw (Exception.))
-              ["error" true]
-              (do (deliver error<? true) {:ack? true})))]
+            {:status (case [routing-key redelivered?]
+                       ["reject" false]
+                       (do (deliver reject<? true) :reject)
+                       ["ack" false]
+                       (do (deliver ack<? true) :ack)
+                       ["nack" false]
+                       (do (deliver nack<? true) :nack)
+                       ["nack" true]
+                       (do (deliver renack<? true) :ack)
+                       ["error" false]
+                       (throw (Exception.))
+                       ["error" true]
+                       (do (deliver error<? true) :ack))})]
       (p/with-start [consumer (is (make-consumer handler))]
         (testing "ack."
           (is (nil? (publish! consumer "ack")))
