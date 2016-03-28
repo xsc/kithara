@@ -2,7 +2,7 @@
 = kithara image:https://travis-ci.org/xsc/kithara.svg?branch=master["Build Status", link="https://travis-ci.org/xsc/kithara"]
 :toc: macro
 :toc-title:
-:toclevels: 3
+:toclevels: 2
 
 *kithara* is a (limited) https://www.rabbitmq.com[RabbitMQ] client for Clojure,
 based on https://github.com/jhalterman/lyra[Lyra]. Its specific scope - and
@@ -181,6 +181,48 @@ included in a custom, unique consumer tag chosen by kithara.
 
 The options `:local?`, `:exclusive?` and `:arguments` refer to the respective
 parameters in RabbitMQ's `basic.consume`.
+
+[[channels]]
+=== Channels
+
+Consumers have to be bound to a channel before they can be started, which
+is easily achieved:
+
+[source,clojure]
+----
+(kithara.core/with-channel base-consumer)
+(kithara.core/with-channel base-consumer {... options ...})
+----
+
+Available options map very closely to RabbitMQ's `channel.open` and `basic.qos`:
+
+- `:channel-number`
+- `:prefetch-count`
+- `:prefetch-size`
+- `:prefetch-global?`
+
+You should set at least `:prefetch-count` to prevent your consumer from loading
+more messages into memory than it can stomach. There is also a shorthand for
+that:
+
+[source,clojure]
+----
+(kithara.core/with-prefetch-channel base-consumer prefetch-count)
+----
+
+Note that, just like all the other kithara wrapper functions, `with-channel`
+can be fed with a _seq_ of consumers - meaning that 3 threads consuming from
+the same channel can be set up as simply as specifying:
+
+[source,clojure]
+----
+(kithara.core/with-channel (repeat 3 base-consumer) ...)
+----
+
+But the rule usually is: one channel per thread.
+
+[[queues]]
+=== Queues
 
 [[common-messaging-patterns]]
 == Common Messaging Patterns
