@@ -112,11 +112,20 @@
         (update-in [:properties :headers] dissoc :x-death)
         (update-in [:properties :headers :x-kithara-retries] (fnil inc 0)))))
 
+(defn- log-message-backoff!
+  [message]
+  (let [n (number-of-attempt message)]
+    (log/debugf "[%s] message has been seen %d time%s - backing off by %sms."
+                (:consumer-tag message)
+                n
+                (if (> n 1) "s" "")
+                (get-in message [:properties :expiration]))))
+
 (defn- publish-dead-message!
   [{:keys [dead-letter-queue] :as component} message]
-  (->> message
-       (prepare-dead-message component)
-       (publisher/publish dead-letter-queue)))
+  (let [message' (prepare-dead-message component message)]
+    (log-message-backoff! message')
+    (publisher/publish dead-letter-queue message')))
 
 (defn- normalize-retried-message
   [message]
