@@ -31,13 +31,15 @@
   <li><code>:redelivered?</code>: whether the message was redelivered,</li>
   <li><code>:delivery-tag</code>: the message’s delivery tag.</li>
 </ul>
-<p>Messages will be confirmed based on the return value of the handler function:</p>
+<p>Messages will be confirmed based on the return value of the handler function, a map providing a <code>:status</code> key having one of the following values:</p>
 <ul>
-  <li><code>{:reject? true, :requeue? &lt;bool&gt;}</code> -&gt; REJECT (defaults to no requeue),</li>
-  <li><code>{:nack? true, :requeue? &lt;bool&gt;}</code> -&gt; NACK (defaults to requeue),</li>
-  <li><code>{:ack? true}</code>-&gt; ACK,</li>
-  <li><code>{:done? true}</code> -&gt; do nothing (was handled directly).</li>
+  <li><code>:ack</code></li>
+  <li><code>:nack</code></li>
+  <li><code>:reject</code></li>
+  <li><code>:error</code> (an uncaught exception occured)</li>
+  <li><code>:done</code> (do nothing since the message was already explicitly handled)</li>
 </ul>
+<p>For <code>:nack</code>, <code>:reject</code> and <code>:error</code>, the key <code>:requeue?</code> can be given to indicate whether or not the message should be requeued.</p>
 <p>Additionally, <code>:message</code> (a string) and <code>:error</code> (a <code>Throwable</code>) keys can be added to trigger a log message. See <a href="kithara.middlewares.confirmation.html#var-wrap-confirmation">wrap-confirmation</a> and <a href="kithara.middlewares.logging.html#var-wrap-logging">wrap-logging</a>.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/components/base_consumer.clj#L94">view source</a></div></div><div class="public anchor" id="var-publisher"><h3>publisher</h3><div class="usage"><code>(publisher options &amp; [properties])</code></div><div class="doc"><div class="markdown"><p>Create a publisher component. Accepts all options supported by <a href="kithara.config.html#var-connection">kithara.config/connection</a> and <a href="kithara.config.html#var-behaviour">kithara.config/behaviour</a>.</p>
 <p><code>properties</code> will be used for each message unless explicitly overridden (see AMQP’s <code>BasicProperties</code>).</p>
 <p>The resulting component implements <code>IFn</code> and can thus be called like a simple function to publish a message.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/components/publisher.clj#L49">view source</a></div></div><div class="public anchor" id="var-with-channel"><h3>with-channel</h3><div class="usage"><code>(with-channel consumers)</code><code>(with-channel consumers channel-options)</code></div><div class="doc"><div class="markdown"><p>Wrap the given component(s) with setup/teardown of a RabbitMQ channel. The following options can be given:</p>
@@ -57,7 +59,7 @@
      :username "kithara"
      :password "i-am-secret"}))
 </code></pre>
-<p>Note: <a href="kithara.protocols.html#var-set-connection">set-connection</a> will be used to inject the connection.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/components/connection_wrapper.clj#L48">view source</a></div></div><div class="public anchor" id="var-with-durable-queue"><h3>with-durable-queue</h3><div class="usage"><code>(with-durable-queue consumers queue-name)</code><code>(with-durable-queue consumers queue-name queue-options &amp; more-bindings)</code></div><div class="doc"><div class="markdown"><p>See <a href="kithara.core.html#var-with-queue">with-queue</a>. Will create/expect a durable, non-exclusive and non-auto-delete queue.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/components/queue_wrapper.clj#L120">view source</a></div></div><div class="public anchor" id="var-with-prefetch-channel"><h3>with-prefetch-channel</h3><div class="usage"><code>(with-prefetch-channel consumers prefetch-count &amp; [channel-options])</code></div><div class="doc"><div class="markdown"><p>See <a href="kithara.core.html#var-with-channel">with-channel</a>. Convenience function setting the per-channel prefetch count directly.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/components/channel_wrapper.clj#L58">view source</a></div></div><div class="public anchor" id="var-with-queue"><h3>with-queue</h3><div class="usage"><code>(with-queue consumers queue-name)</code><code>(with-queue consumers queue-name queue-options &amp; more-bindings)</code></div><div class="doc"><div class="markdown"><p>Wrap the given consumer(s) with queue setup/teardown. If options are given, the queue will be actively declared using the following keys:</p>
+<p>Note: <a href="kithara.protocols.html#var-set-connection">set-connection</a> will be used to inject the connection.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/components/connection_wrapper.clj#L48">view source</a></div></div><div class="public anchor" id="var-with-durable-queue"><h3>with-durable-queue</h3><div class="usage"><code>(with-durable-queue consumers queue-name)</code><code>(with-durable-queue consumers queue-name queue-options &amp; more-bindings)</code></div><div class="doc"><div class="markdown"><p>See <a href="kithara.core.html#var-with-queue">with-queue</a>. Will create/expect a durable, non-exclusive and non-auto-delete queue.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/components/queue_wrapper.clj#L119">view source</a></div></div><div class="public anchor" id="var-with-prefetch-channel"><h3>with-prefetch-channel</h3><div class="usage"><code>(with-prefetch-channel consumers prefetch-count &amp; [channel-options])</code></div><div class="doc"><div class="markdown"><p>See <a href="kithara.core.html#var-with-channel">with-channel</a>. Convenience function setting the per-channel prefetch count directly.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/components/channel_wrapper.clj#L58">view source</a></div></div><div class="public anchor" id="var-with-queue"><h3>with-queue</h3><div class="usage"><code>(with-queue consumers queue-name)</code><code>(with-queue consumers queue-name queue-options &amp; more-bindings)</code></div><div class="doc"><div class="markdown"><p>Wrap the given consumer(s) with queue setup/teardown. If options are given, the queue will be actively declared using the following keys:</p>
 <ul>
   <li><code>:durable?</code></li>
   <li><code>:exclusive?</code></li>
@@ -78,7 +80,7 @@
     {:exchange "exchange", :routing-keys ["#"]}
     {:exchange "other", :routing-keys ["*.message"]}))
 </code></pre>
-<p>Note: <a href="kithara.protocols.html#var-set-queue">set-queue</a> will be used to inject the queue.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/components/queue_wrapper.clj#L76">view source</a></div></div><div class="public anchor" id="var-with-server-named-queue"><h3>with-server-named-queue</h3><div class="usage"><code>(with-server-named-queue consumers &amp; bindings)</code></div><div class="doc"><div class="markdown"><p>Wrap the given consumer(s) with setup/teardown of a server-named, exclusive, non-durable, auto-deleted queue.</p>
+<p>Note: <a href="kithara.protocols.html#var-set-queue">set-queue</a> will be used to inject the queue.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/components/queue_wrapper.clj#L75">view source</a></div></div><div class="public anchor" id="var-with-server-named-queue"><h3>with-server-named-queue</h3><div class="usage"><code>(with-server-named-queue consumers &amp; bindings)</code></div><div class="doc"><div class="markdown"><p>Wrap the given consumer(s) with setup/teardown of a server-named, exclusive, non-durable, auto-deleted queue.</p>
 <p>The queue can be bound to an exchange by specifying the following keys in as additional parameter maps:</p>
 <ul>
   <li><code>:exchange</code></li>
@@ -91,4 +93,4 @@
     ...
     {:exchange "exchange", :routing-keys ["#"]}))
 </code></pre>
-<p>Note: <a href="kithara.protocols.html#var-set-queue">set-queue</a> will be used to inject the queue.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/components/queue_wrapper.clj#L133">view source</a></div></div></div></body></html>
+<p>Note: <a href="kithara.protocols.html#var-set-queue">set-queue</a> will be used to inject the queue.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/components/queue_wrapper.clj#L132">view source</a></div></div></div></body></html>

@@ -4,7 +4,8 @@
 <ul>
   <li><code>:queue</code>: options for the dead letter queue (including <code>:queue-name</code>,  <code>:durable?</code>, <code>:exclusive?</code> and <code>:auto-delete?</code>),</li>
   <li><code>:backoff-exchange</code>: options for the exchange the dead letter queue will be  bound to (including <code>:exchange-name</code>, <code>:durable?</code>, <code>:exclusive?</code> and  <code>:auto-delete?</code>),</li>
-  <li><code>:retry-exchange</code>: options for the exchange that messages-to-retry will  be published to (see <code>:backoff-exchange</code> for options).</li>
+  <li><code>:retry-exchange</code>: options for the exchange that messages-to-retry will  be published to (see <code>:backoff-exchange</code> for options),</li>
+  <li><code>:backoff</code>: a map of <code>:min</code> and <code>:max</code> giving minimal and maximal backoff  intervals in milliseconds (default: 50ms &lt;= backoff &lt;= 1m).</li>
 </ul>
 <p>All three values can be strings, in which case they will be used for queue/exchange names and result in a non-durable setup. If no names are given, they will be derived from the consumer queue’s. Example:</p>
 <pre><code>(defonce rabbitmq-consumer
@@ -78,4 +79,4 @@
 <p><strong>Caveat</strong></p>
 <p>There is one caveat (also noted in the RabbitMQ documentation), consisting of expiry only happening at the head of the queue. This means that all messages in the dead letter queue will take at least the same time as the current head to be republished.</p>
 <p>See: <a href="https://www.rabbitmq.com/ttl.html">https://www.rabbitmq.com/ttl.html</a></p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/patterns/dead_letter_backoff.clj#L223">view source</a></div></div><div class="public anchor" id="var-with-durable-dead-letter-backoff"><h3>with-durable-dead-letter-backoff</h3><div class="usage"><code>(with-durable-dead-letter-backoff components &amp; [{:keys [backoff-exchange retry-exchange queue]}])</code></div><div class="doc"><div class="markdown"><p>See <a href="kithara.patterns.dead-letter-backoff.html#var-with-dead-letter-backoff">with-dead-letter-backoff</a>. Will create/expect durable, non-exclusive and non-auto-delete dead-letter queues/exchanges.</p>
-<p>Note that this makes only sense if the original consumer queue has the same properties, since otherwise you’ll lose dead-lettered messages on retry.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/patterns/dead_letter_backoff.clj#L311">view source</a></div></div></div></body></html>
+<p>Note that this makes only sense if the original consumer queue has the same properties, since otherwise you’ll lose dead-lettered messages on retry.</p></div></div><div class="src-link"><a href="https://github.com/xsc/kithara/blob/v0.1.0-SNAPSHOT/src/kithara/patterns/dead_letter_backoff.clj#L313">view source</a></div></div></div></body></html>
