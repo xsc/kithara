@@ -221,7 +221,9 @@
      bound to (including `:exchange-name`, `:durable?`, `:exclusive?` and
      `:auto-delete?`),
    - `:retry-exchange`: options for the exchange that messages-to-retry will
-     be published to (see `:backoff-exchange` for options).
+     be published to (see `:backoff-exchange` for options),
+   - `:backoff`: a map of `:min` and `:max` giving minimal and maximal backoff
+     intervals in milliseconds (default: 50ms <= backoff <= 1m).
 
    All three values can be strings, in which case they will be used for
    queue/exchange names and result in a non-durable setup. If no names
