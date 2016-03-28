@@ -37,13 +37,12 @@
   (p/wrap-queue components queue))
 
 (defn- open-channel
-  [{:keys [channel connection]}]
-  (or channel (channel/open connection)))
+  [{:keys [connection]}]
+  (channel/open connection))
 
 (defn- close-channel
-  [{:keys [channel]} ch]
-  (when channel
-    (channel/close ch))
+  [ch]
+  (channel/close ch)
   nil)
 
 ;; ## Component
@@ -55,7 +54,7 @@
                             declare-queue?]
   :this/as            *this*
   :assert/connection? (some? connection)
-  :declare-channel    (open-channel *this*) #(close-channel *this* %)
+  :declare-channel    (open-channel *this*) #(close-channel %)
   :queue              (make-queue *this*)
   :components/running (prepare-components *this*)
 
