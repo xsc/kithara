@@ -235,11 +235,15 @@ patterns and scenarios.
 [[dead-letter-backoff]]
 === Backoff via Dead-Letter-Queues
 
-The namespace http://xsc.github.io/kithara/kithara.patterns.dead-letter-backoff.html[`kithara.patterns.dead-letter-backoff`]
-contains two wrappers `with-dead-letter-backoff` and
-`with-durable-dead-letter-backoff` providing delayed requeuing of messages by
-dispatching them to a secondary queue, the "dead letter queue", from which it'll
-eventually be republished. Both wrappers have to be applied after `with-queue`.
+http://xsc.github.io/kithara/kithara.patterns.dead-letter-backoff.html[*Documentation*]
+
+The two wrappers
+http://xsc.github.io/kithara/kithara.patterns.dead-letter-backoff.html#var-with-dead-letter-backoff[`with-dead-letter-backoff`]
+and
+http://xsc.github.io/kithara/kithara.patterns.dead-letter-backoff.html#var-with-durable-dead-letter-backoff[`with-durable-dead-letter-backoff`]
+provide delayed requeuing of messages by dispatching them to a secondary queue,
+the "dead letter queue", from which it'll eventually be republished. Both
+wrappers have to be applied after <<queues,`with-queue`>>.
 
 The simplest version infers names of additional exchanges/queues using the
 original consumer queue:
@@ -249,14 +253,11 @@ original consumer queue:
 (require '[kithara.patterns.dead-letter-backoff :as dlx])
 
 (defonce rabbitmq-consumer-with-backoff
-  (-> (rabbitmq/consumer ...)
+  (-> (kithara.core/consumer ...)
       (dlx/with-dead-letter-backoff)
-      (rabbitmq/with-queue ...)
+      (kithara.core/with-queue ...)
       ...))
 ----
-
-Additional options can be given - see the docstring of
-`with-dead-letter-backoff` for a detailed overview.
 
 [[lower-level-api]]
 == Lower-Level RabbitMQ API
