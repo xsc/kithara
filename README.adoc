@@ -2,7 +2,7 @@
 = kithara image:https://travis-ci.org/xsc/kithara.svg?branch=master["Build Status", link="https://travis-ci.org/xsc/kithara"]
 :toc: macro
 :toc-title:
-:toclevels: 2
+:toclevels: 3
 
 *kithara* is a (limited) https://www.rabbitmq.com[RabbitMQ] client for Clojure,
 based on https://github.com/jhalterman/lyra[Lyra]. Its specific scope - and
