@@ -226,6 +226,30 @@ http://xsc.github.io/kithara/kithara.core.html#var-with-server-named-queue[`with
 and
 http://xsc.github.io/kithara/kithara.core.html#var-with-durable-queue[`with-durable-queue`].
 
+=== Connection
+
+http://xsc.github.io/kithara/kithara.core.html#var-with-connection[*Documentation*]
+
+Without a connection to your RabbitMQ cluster there isn't really a lot your
+consumer can accomplish. Set it thus up via:
+
+[source,clojure]
+----
+(kithara.core/with-connection
+  consumer
+  {:host     "rabbitmq.host.com"
+   :vhost    "/kithara"
+   :username "..."
+   :password "..."})
+----
+
+See
+http://xsc.github.io/kithara/kithara.config.html#var-connection[`kithara.config/connection`]
+for endpoint configuration and
+http://xsc.github.io/kithara/kithara.config.html#var-behaviour[`kithara.config/behaviour`]
+for recovery/retry semantics. By default, the connection will employ backing-off
+recovery (up to 60s) and immediate and unlimited retry.
+
 [[common-messaging-patterns]]
 == Common Messaging Patterns
 
@@ -262,10 +286,14 @@ original consumer queue:
 [[lower-level-api]]
 == Lower-Level RabbitMQ API
 
+http://xsc.github.io/kithara/rabbitmq/index.html[*Documentation*]
+
 Kithara wraps the official Java RabbitMQ client - but only as far as necessary
 to build consumers (and patterns). You can access those functions using
-the `kithara.rabbitmq.*` namespaces as outlined in the respective
-http://xsc.github.io/kithara/rabbitmq/index.html[auto-generated documentation].
+the `kithara.rabbitmq.*` namespaces.
+
+(Alghtough, if you crave this level of control you should probably use
+something like langohr.)
 
 [[contributing]]
 == Contributing
