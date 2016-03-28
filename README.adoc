@@ -116,6 +116,8 @@ little more testable in the long run.
 
 === Base Consumer
 
+http://xsc.github.io/kithara/kithara.core.html#var-consumer[*Documentation*]
+
 Once your handler is ready, you can create the base consumer component. It's not
 yet bound to any connection, queue or channel, it just encapsulates the handling
 logic.
@@ -185,132 +187,50 @@ parameters in RabbitMQ's `basic.consume`.
 [[channels]]
 === Channels
 
+http://xsc.github.io/kithara/kithara.core.html#var-with-channel[*Documentation*]
+
 Consumers have to be bound to a channel before they can be started, which
 is easily achieved:
 
 [source,clojure]
 ----
-(kithara.core/with-channel base-consumer)
-(kithara.core/with-channel base-consumer {... options ...})
+(kithara.core/with-channel
+  consumer
+  {:prefetch-count 256})
 ----
 
-Available options map very closely to RabbitMQ's `channel.open` and `basic.qos`:
-
-- `:channel-number`
-- `:prefetch-count`
-- `:prefetch-size`
-- `:prefetch-global?`
-
-You should set at least `:prefetch-count` to prevent your consumer from loading
-more messages into memory than it can stomach. There is also a shorthand for
-that:
-
-[source,clojure]
-----
-(kithara.core/with-prefetch-channel base-consumer prefetch-count)
-----
-
-==== Multiple Consumers
-
-Just like all the other kithara wrapper functions, `with-channel` can be fed
-with a _seq_ of consumers - meaning that 3 threads consuming from the same
-channel can be set up as simply as specifying:
-
-[source,clojure]
-----
-(kithara.core/with-channel (repeat 3 base-consumer) ...)
-----
-
-But also note that the rule usually is: one channel per thread.
+See the documentation for available options. You should set at least
+`:prefetch-count`, though, to prevent your consumer from loading more messages
+into memory than it can stomach. A shorthand for this can be found in
+http://xsc.github.io/kithara/kithara.core.html#var-with-prefetch-channel[`with-prefetch-channel`].
 
 [[queues]]
 === Queues
+
+http://xsc.github.io/kithara/kithara.core.html#var-with-queue[*Documentation*]
 
 Consumers need a queue to receive messages from and that queue is bound to
 exchange/routing-key pairs. It can be easily set up:
 
 [source,clojure]
 ----
-(kithara.core/with-queue consumer "queue-name")
 (kithara.core/with-queue
-   consumer
-  "queue-name"
-  {... options ...}
-  ... bindings ...)
-----
-
-If no options are given, the queue will not be actively declared but expected
-to already exist.
-
-Options map closely to RabbitMQ's `queue.declare`:
-
-- `:durable?`
-- `:exclusive?`
-- `:auto-delete?`
-- `:declare-arguments`
-
-Bindings are given as maps of `:exchange` and `:routing-keys` and can be merged
-into the options if there is only one exchange to consume from.
-
-==== Multiple Consumers
-
-Just like all the other kithara wrapper functions, `with-queue` can be fed with
-a _seq_ of consumers - meaning that 3 consumers receiving messages from the
-same queue can be set up as simply as specifying:
-
-[source,clojure]
-----
-(kithara.core/with-queue (repeat 3 consumer) ...)
-----
-
-Note that whether consumers share a channel or use their own depends on how
-<<channels,`with-channel`> is nested.
-
-The following will reuse the same channel for each consumer:
-
-[source,clojure]
-----
-(kithara.core/with-queue
-  (kithara.core/with-channel
-    (repeat 3 consumer)
-    ....)
-  ...)
-----
-
-While this version will create a single channel for each one:
-
-[source,clojure]
-----
-(kithara.core/with-queue
-  (repeat 3 (kithara.core/with-channel
-              consumer
-              ....))
-  ...)
-----
-
-==== Durable Queues
-
-Durable queues, i.e. setting options appropriately, can be created via:
-
-[source,clojure]
-----
-(kithara.core/with-durable-queue consumer "queue-name")
-(kithara.core/with-durable-queue
   consumer
   "queue-name"
-  {... options ...}
-  ... bindings ...)
+  {:durable?     true
+   :exclusive?   false
+   :auto-delete? false
+   :exchange     "exchange"
+   :routing-keys ["#"]})
 ----
 
-==== Server-Named Queues
+If no options (see documentation) are given, the queue will not be actively
+declared but expected to already exist.
 
-You can use the following to create a non-durable, exclusive, auto-deleted
-queue:
-
-[source,clojure]
-----
-(kithara.core/with-server-named-queue consumer ... bindings ...)
-----
+There are shorthands for commonly used queue types like
+http://xsc.github.io/kithara/kithara.core.html#var-with-server-named-queue[`with-server-named-queue`]
+and
+http://xsc.github.io/kithara/kithara.core.html#var-with-durable-queue[`with-durable-queue`].
 
 [[common-messaging-patterns]]
 == Common Messaging Patterns
