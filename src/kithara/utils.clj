@@ -1,4 +1,4 @@
-(ns ^:no-doc kithara.rabbitmq.utils
+(ns ^:no-doc kithara.utils
   (:require [flake.core :as flake]
             [flake.utils :refer [base62-encode]]))
 

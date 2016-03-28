@@ -2,9 +2,10 @@
   (:require [kithara.rabbitmq
              [exchange :as exchange]
              [publish :as publisher]
-             [queue :as queue]
+             [queue :as queue]]
+            [kithara
+             [protocols :as p]
              [utils :as u]]
-            [kithara.protocols :as p]
             [clojure.tools.logging :as log]
             [peripheral.core :refer [defcomponent]]))
 

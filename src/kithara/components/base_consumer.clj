@@ -1,13 +1,13 @@
 (ns kithara.components.base-consumer
   "Implementation of Consumer setup/teardown. Please use via `kithara.core`."
-  (:require [kithara.rabbitmq
-             [consumer :as consumer]
-             [utils :as u]]
+  (:require [kithara.rabbitmq.consumer :as consumer]
             [kithara.middlewares
              [confirmation :refer [wrap-confirmation]]
              [confirmation-defaults :refer [wrap-confirmation-defaults]]
              [logging :refer [wrap-logging]]]
-            [kithara.protocols :as p]
+            [kithara
+             [protocols :as p]
+             [utils :as u]]
             [peripheral.core :refer [defcomponent]]
             [clojure.tools.logging :as log]))
 

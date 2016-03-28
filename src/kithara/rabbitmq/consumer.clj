@@ -1,8 +1,8 @@
 (ns kithara.rabbitmq.consumer
   (:require [kithara.rabbitmq
              [message :as message]
-             [queue :as queue]
-             [utils :as u]]
+             [queue :as queue]]
+            [kithara.utils :as u]
             [potemkin :refer [defprotocol+]])
   (:import [com.rabbitmq.client Channel Consumer]))
 

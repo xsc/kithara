@@ -2,8 +2,8 @@
   (:refer-clojure :exclude [declare get])
   (:require [kithara.rabbitmq
              [message :as message]
-             [publish :as publisher]
-             [utils :as u]]
+             [publish :as publisher]]
+            [kithara.utils :as u]
             [potemkin :refer [defprotocol+]])
   (:import [com.rabbitmq.client
             AMQP$Queue$DeclareOk

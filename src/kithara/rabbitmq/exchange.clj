@@ -1,6 +1,6 @@
 (ns kithara.rabbitmq.exchange
     (:refer-clojure :exclude [declare])
-    (:require [kithara.rabbitmq.utils :as u])
+    (:require [kithara.utils :as u])
     (:import [com.rabbitmq.client Channel]))
 
 ;; ## Exchange Type (w/ Lookup)
