@@ -85,7 +85,32 @@ Most of the semantics should be clear, so just a few notes:
 
 ==== Confirmation Format
 
-TODO
+The confirmation is a map describing how to react to the message that was
+processed, mainly using the `:status` key which can take any of the following
+values:
+
+- `:ack` (`ACK` the message)
+- `:nack` (`NACK` the message) 
+- `:reject` (`REJECT` the message)
+- `:error` (an exception occured)
+- `:done` (the message was explicitly confirmed within the handler)
+
+`:nack`, `:reject` and `:error` also rely on the `:requeue?` key to decide
+whether or not to re-add a message to the back of the queue (defaults to `true`
+for `NACK`). Additionally, `:message` and `:error` can be given to augment the
+log messages printed by the consumer.
+
+An example confirmation could thus be:
+
+[source,clojure]
+----
+{:status   :nack
+ :requeue? false
+ :message  "this is unacceptable."}
+----
+
+The reliance on pure data for message handling should make your handlers a
+little more testable in the long run.
 
 [[common-messaging-patterns]]
 == Common Messaging Patterns
