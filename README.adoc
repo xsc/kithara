@@ -79,9 +79,11 @@ This is an example message:
 Most of the semantics should be clear, so just a few notes:
 
 - `:body-raw` always contains a byte array with the raw payload.
-- `:body` contains a potentially preprocessed payload (see Message Coercion),
-  otherwise it's identical to `:body-raw`.
-- `:properties` represents the message's https://www.rabbitmq.com/releases/rabbitmq-java-client/v3.6.1/rabbitmq-java-client-javadoc-3.6.1/com/rabbitmq/client/AMQP.BasicProperties.html[`BasicProperties`].
+- `:body` contains a potentially preprocessed payload (see
+  <<message-coercion,Message Coercion>>), otherwise it's identical to
+`:body-raw`.
+- `:properties` represents the message's
+  https://www.rabbitmq.com/releases/rabbitmq-java-client/v3.6.1/rabbitmq-java-client-javadoc-3.6.1/com/rabbitmq/client/AMQP.BasicProperties.html[`BasicProperties`].
 
 ==== Confirmation Format
 
@@ -90,7 +92,7 @@ processed, mainly using the `:status` key which can take any of the following
 values:
 
 - `:ack` (`ACK` the message)
-- `:nack` (`NACK` the message) 
+- `:nack` (`NACK` the message)
 - `:reject` (`REJECT` the message)
 - `:error` (an exception occured)
 - `:done` (the message was explicitly confirmed within the handler)
@@ -111,6 +113,74 @@ An example confirmation could thus be:
 
 The reliance on pure data for message handling should make your handlers a
 little more testable in the long run.
+
+=== Base Consumer
+
+Once your handler is ready, you can create the base consumer component. It's not
+yet bound to any connection, queue or channel, it just encapsulates the handling
+logic.
+
+[source,clojure]
+----
+(kithara.core/consumer handler)
+(kithara.core/consumer handler {... options ...})
+----
+
+Options can be used to tweak its behaviour a bit.
+
+[[message-coercion]]
+==== Message Coercion
+
+The `:as` option specifies a coercer for the incoming payload. It can be one of
+the following:
+
+- `:bytes` (default): just use the raw byte array,
+- `:string`: convert the byte array to a UTF-8 string,
+- a function: apply the function to the byte array,
+- any value implementing `kithara.protocols/Coercer`.
+
+So, a consumer that prints every incoming message's `:body` as a string would
+be constructed as:
+
+[source,clojure]
+----
+(kithara.core/consumer
+  (fn [{:keys [body]}]
+    (println body)
+    {:status :ack})
+  {:as :string})
+----
+
+==== Default Confirmation Behaviour
+
+If a handler does not return a map (or a map without the `:status` key) the
+message will be confirmed using `ACK`. In the same vein, if the handler throws
+an exception the message will be confirmed with `NACK` and requeued.
+
+This can be adjusted using the `:default-confirmation` and `:error-confirmation`
+keys, e.g.:
+
+[source,clojure]
+----
+(kithara.core/consumer
+  ...
+  {:default-confirmation {:status :nack}
+   :error-confirmation   {:status :reject}})
+----
+
+==== Consumer Name/Tag
+
+It's often useful to be able to identify a consumer, e.g. in the RabbitMQ
+management plugin displaying only the consumer tag.
+
+You can thus either set the consumer tag explicitly (using the `:consumer-tag`
+option) or you can give your consumer a name (`:consumer-name`) that will be
+included in a custom, unique consumer tag chosen by kithara.
+
+==== Low-Level Options
+
+The options `:local?`, `:exclusive?` and `:arguments` refer to the respective
+parameters in RabbitMQ's `basic.consume`.
 
 [[common-messaging-patterns]]
 == Common Messaging Patterns
