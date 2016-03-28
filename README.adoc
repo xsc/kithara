@@ -19,32 +19,80 @@ toc::[]
 [[usage]]
 == Usage
 
-Coming soon.
+*Leiningen* (via https://clojars.org/kithara[Clojars])
 
-[[quickstart]]
-=== Quickstart
+image:https://img.shields.io/clojars/v/kithara.svg["Clojars Project", link="https://clojars.org/kithara"]
+
+*REPL*
 
 [source,clojure]
 ----
-(require '[kithara.core :as rabbitmq]
-         '[com.stuartsierra.component :as component])
-
-(defonce rabbitmq-consumer
-  (-> (rabbitmq/consumer
-        (fn [{:keys [body]}]
-          (println body))
-        {:as :string})
-      (rabbitmq/with-queue
-        "my-queue"
-        {:exchange     "my-exchange"
-         :routing-keys ["*.print"]})
-      (rabbitmq/with-channel
-        {:prefetch-count 20})
-      (rabbitmq/with-connection
-        {:host "rabbitmq.my-cluster.com"})))
-
-(alter-var-root #'rabbitmq-consumer component/start)
+(require '[kithara.core :as k])
 ----
+
+[[quickstart]]
+== Quickstart
+
+With kithara you have a handler:
+
+[source,clojure]
+----
+(defn message-handler
+  [{:keys [body]}]
+  (println "I received a message:" body)
+  {:status :ack})
+----
+
+Since the handler takes a message and returns a description of what to do with
+it, you can wrap it easily:
+
+[source,clojure]
+----
+(defn message-handler-with-nack
+  [{:keys [body] :as message}]
+  (if (= body "error")
+    {:status :nack}
+    (message-handler message)))
+----
+
+You add coercion and some metadata:
+
+[source,clojure]
+----
+(defonce consumer
+  (-> message-handler-with-nack
+      (k/consumer {:as :string, :consumer-name "kithara-test"})
+      ...))
+----
+
+You add a channel, a queue (and bindings) and a connection:
+
+[source,clojure]
+----
+(defonce consumer
+  (-> message-handler-with-nack
+      (k/consumer {:as :string, :consumer-name "kithara-test"})
+      (k/with-channel {:prefetch-count 256})
+      (k/with-queue "kithara-queue" {:exchange "kithara", :routing-keys ["#"]})
+      (k/with-connection {:host "localhost", :vhost "/kithara"})) )
+----
+
+And you watch it goooooo:
+
+[source,clojure]
+----
+(alter-var-root #'consumer com.stuartsierra.component/start)
+17:37:25.372 [nREPL-worker-0] INFO net.jodah.lyra.internal.ConnectionHandler - Creating connection cxn-2 to [docker:5672]
+17:37:25.390 [nREPL-worker-0] INFO net.jodah.lyra.internal.ConnectionHandler - Created connection cxn-2 to amqp://192.168.59.103:5672/
+17:37:25.395 [nREPL-worker-0] INFO net.jodah.lyra.internal.ConnectionHandler - Created channel-1 on cxn-2
+17:37:25.410 [nREPL-worker-0] INFO net.jodah.lyra.internal.ConnectionHandler - Created channel-2 on cxn-2
+17:37:25.421 [nREPL-worker-0] DEBUG kithara.components.base-consumer - [kithara-test] starting consumer on queue kithara-queue (desired tag: 'kithara-test:96CQWOfPfKf8tjQ328') ...
+17:37:25.425 [nREPL-worker-0] INFO net.jodah.lyra.internal.ChannelHandler - Created consumer-kithara-test:96CQWOfPfKf8tjQ328 of kithara-queue via channel-2 on cxn-2
+I received a message: Hello, World!
+17:38:29.819 [rabbitmq-cxn-2-consumer] DEBUG kithara.middlewares.logging - [kithara-test] [kithara-test:96CQWOfPfKf8tjQ328] [ack] exchange="kithara", routing-key="test-message", size=13
+----
+
+(And then you probably disable some of Lyra's logging.)
 
 [[building-a-consumer]]
 == Building a Consumer
@@ -52,7 +100,7 @@ Coming soon.
 kithara is basically a toolbox with components handling RabbitMQ connection,
 channel and queue setup. Here you'll see how to combine them.
 
-[[building-the-handler]]
+[[handler]]
 === Handler
 
 A handler is a function. It takes a single map (the message) and produces
@@ -124,8 +172,8 @@ logic.
 
 [source,clojure]
 ----
-(kithara.core/consumer handler)
-(kithara.core/consumer handler {... options ...})
+(k/consumer handler)
+(k/consumer handler {... options ...})
 ----
 
 Options can be used to tweak its behaviour a bit.
@@ -146,7 +194,7 @@ be constructed as:
 
 [source,clojure]
 ----
-(kithara.core/consumer
+(k/consumer
   (fn [{:keys [body]}]
     (println body)
     {:status :ack})
@@ -164,7 +212,7 @@ keys, e.g.:
 
 [source,clojure]
 ----
-(kithara.core/consumer
+(k/consumer
   ...
   {:default-confirmation {:status :nack}
    :error-confirmation   {:status :reject}})
@@ -189,7 +237,7 @@ is easily achieved:
 
 [source,clojure]
 ----
-(kithara.core/with-channel
+(k/with-channel
   consumer
   {:prefetch-count 256})
 ----
@@ -209,7 +257,7 @@ exchange/routing-key pairs. It can be easily set up:
 
 [source,clojure]
 ----
-(kithara.core/with-queue
+(k/with-queue
   consumer
   "queue-name"
   {:durable?     true
@@ -235,7 +283,7 @@ consumer can accomplish. Set it thus up via:
 
 [source,clojure]
 ----
-(kithara.core/with-connection
+(k/with-connection
   consumer
   {:host     "rabbitmq.host.com"
    :vhost    "/kithara"
@@ -277,9 +325,9 @@ original consumer queue:
 (require '[kithara.patterns.dead-letter-backoff :as dlx])
 
 (defonce rabbitmq-consumer-with-backoff
-  (-> (kithara.core/consumer ...)
+  (-> (k/consumer ...)
       (dlx/with-dead-letter-backoff)
-      (kithara.core/with-queue ...)
+      (k/with-queue ...)
       ...))
 ----
 
