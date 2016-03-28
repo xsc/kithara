@@ -87,31 +87,21 @@
 
 ;; ## Consumer w/ Dead Letter Handling
 
-(defn- previous-backoff
+(defn- number-of-attempt
   [message]
-  (some-> message
-          (get-in [:properties :headers :x-death])
-          first
-          :original-expiration
-          Long.))
+  (or (some-> message
+              (get-in [:properties :headers :x-kithara-retries])
+              Long.)
+      1))
 
 (defn- calculate-backoff
-  [{:keys [min max factor]
+  [{:keys [min max]
     :or {min    50
-         max    60000
-         factor 2}}
+         max    60000}}
    message]
-  (let [t  (previous-backoff message)
-        r  (rand)
-        t' (if t
-             (if (>= t max)
-               max
-               (* (+ 2 r) (inc t)))
-             (* (+ 1 r) (inc min)))]
-    (long
-      (cond (< t' min) min
-            (> t' max) max
-            :else t'))))
+  {:pre [(number? min) (number? max)]}
+  (let [n (number-of-attempt message)]
+    (u/exponential-backoff-ms n {:min min, :max max})))
 
 (defn- prepare-dead-message
   [{:keys [backoff-exchange-name backoff]} {:keys [body-raw] :as message}]
