@@ -315,7 +315,7 @@ http://xsc.github.io/kithara/kithara.patterns.dead-letter-backoff.html#var-with-
 and
 http://xsc.github.io/kithara/kithara.patterns.dead-letter-backoff.html#var-with-durable-dead-letter-backoff[`with-durable-dead-letter-backoff`]
 provide delayed requeuing of messages by dispatching them to a secondary queue,
-the "dead letter queue", from which it'll eventually be republished. Both
+the "dead letter queue", from which they'll eventually be republished. Both
 wrappers have to be applied after <<queues,`with-queue`>>.
 
 The simplest version infers names of additional exchanges/queues using the
