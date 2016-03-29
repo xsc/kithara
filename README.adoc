@@ -55,7 +55,7 @@ it, you can wrap it easily:
     (message-handler message)))
 ----
 
-You add coercion and some metadata:
+You turn the handler into a component, adding coercion and a name:
 
 [source,clojure]
 ----
@@ -65,7 +65,7 @@ You add coercion and some metadata:
       ...))
 ----
 
-You add a channel, a queue (and bindings) and a connection:
+Followed by a channel, a queue, some bindings and a connection:
 
 [source,clojure]
 ----
@@ -82,6 +82,7 @@ And you watch it goooooo:
 [source,clojure]
 ----
 (alter-var-root #'consumer com.stuartsierra.component/start)
+;; => nil
 17:37:25.372 [nREPL-worker-0] INFO net.jodah.lyra.internal.ConnectionHandler - Creating connection cxn-2 to [docker:5672]
 17:37:25.390 [nREPL-worker-0] INFO net.jodah.lyra.internal.ConnectionHandler - Created connection cxn-2 to amqp://192.168.59.103:5672/
 17:37:25.395 [nREPL-worker-0] INFO net.jodah.lyra.internal.ConnectionHandler - Created channel-1 on cxn-2
