@@ -1,5 +1,6 @@
 (ns kithara.middlewares.logging
-  (:require [clojure.tools.logging :as log]))
+  (:require [clojure.tools.logging :as log]
+            [manifold.deferred :as d]))
 
 (defn- make-log-tag
   [consumer-name result {:keys [consumer-tag]}]
@@ -37,7 +38,13 @@
           (some? message)
           (log/debugf "%s %s (%s)" tag message info)
           :else
-          (log/debug tag info))))
+          (log/debug tag info)))
+  result)
+
+(defn- handle-error
+  [t]
+  (log/errorf t "uncaught error in message handler.")
+  {:status :error, :error t})
 
 (defn wrap-logging
   "Wrap the given function, taking a kithara message map and producing a
@@ -52,9 +59,8 @@
   [message-handler consumer-name]
   (fn [message]
     (try
-      (let [result (message-handler message)]
-        (write-logs result consumer-name message)
-        result)
+      (-> (message-handler message)
+          (d/chain #(write-logs % consumer-name message))
+          (d/catch handle-error))
       (catch Throwable t
-        (log/errorf t "uncaught error in message handler.")
-        {:status :error, :error t}))))
+        (handle-error t)))))

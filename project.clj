@@ -11,10 +11,11 @@
                  [com.rabbitmq/amqp-client "3.6.1" :scope "provided"]
                  [peripheral "0.5.0"]
                  [flake "0.3.1"]
+                 [manifold "0.1.3"]
                  [potemkin "0.4.3"]]
   :profiles {:dev
-             {:dependencies [[ch.qos.logback/logback-classic "1.1.6"]
-                             [org.slf4j/slf4j-api "1.7.18"]]}
+             {:dependencies [[ch.qos.logback/logback-classic "1.1.7"]
+                             [org.slf4j/slf4j-api "1.7.20"]]}
              :codox
              [:dev
               {:plugins [[lein-codox "0.9.4"]]

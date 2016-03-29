@@ -1,5 +1,6 @@
 (ns kithara.middlewares.confirmation
-  (:require [kithara.rabbitmq.message :as message]))
+  (:require [kithara.rabbitmq.message :as message]
+            [manifold.deferred :as d]))
 
 (defn- unknown-status!
   [confirmation message]
@@ -21,6 +22,12 @@
       (unknown-status! confirmation message))
     confirmation))
 
+(defn- confirm-error
+  [t]
+  {:status  :error
+   :message "when confirming message."
+   :error   t})
+
 (defn wrap-confirmation
   "Wrap the given function, taking a kithara message map and producing a
    confirmation map, to ACK/NACK/REJECT the original message based on keys
@@ -39,9 +46,8 @@
   [message-handler _]
   (fn [message]
     (try
-      (->> (message-handler message)
-           (confirm-message! message))
+      (-> (message-handler message)
+          (d/chain #(confirm-message! message %))
+          (d/catch confirm-error))
       (catch Throwable t
-        {:status  :error
-         :message "when confirming message."
-         :error   t}))))
+        (confirm-error t)))))

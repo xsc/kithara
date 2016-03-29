@@ -1,4 +1,17 @@
-(ns kithara.middlewares.confirmation-defaults)
+(ns kithara.middlewares.confirmation-defaults
+  (:require [manifold.deferred :as d]))
+
+(defn- postprocess
+  [result default-confirmation error-confirmation]
+  (if (map? result)
+    (if (keyword? (:status result))
+      result
+      (merge default-confirmation result))
+    default-confirmation))
+
+(defn- confirm-error
+  [error-confirmation t]
+  (assoc error-confirmation :error t))
 
 (defn wrap-confirmation-defaults
   "Wrap the given function, taking a kithara message map, making sure it
@@ -20,11 +33,8 @@
          (-> error-confirmation :status keyword?)]}
   (fn [message]
     (try
-      (let [result (message-handler message)]
-        (if (map? result)
-          (if (keyword? (:status result))
-            result
-            (merge default-confirmation result))
-          default-confirmation))
+      (-> (message-handler message)
+          (d/chain #(postprocess % default-confirmation error-confirmation))
+          (d/catch #(confirm-error error-confirmation %)))
       (catch Throwable t
-        (assoc error-confirmation :error t)))))
+        (confirm-error error-confirmation t)))))
