@@ -51,7 +51,7 @@ it, you can wrap it easily:
 (defn message-handler-with-nack
   [{:keys [body] :as message}]
   (if (= body "error")
-    {:status :nack}
+    {:status :nack, :requeue? false}
     (message-handler message)))
 ----
 
