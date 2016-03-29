@@ -82,7 +82,7 @@ And you watch it goooooo:
 [source,clojure]
 ----
 (alter-var-root #'consumer com.stuartsierra.component/start)
-;; => nil
+;; => ...
 17:37:25.372 [nREPL-worker-0] INFO net.jodah.lyra.internal.ConnectionHandler - Creating connection cxn-2 to [docker:5672]
 17:37:25.390 [nREPL-worker-0] INFO net.jodah.lyra.internal.ConnectionHandler - Created connection cxn-2 to amqp://192.168.59.103:5672/
 17:37:25.395 [nREPL-worker-0] INFO net.jodah.lyra.internal.ConnectionHandler - Created channel-1 on cxn-2
