@@ -16,8 +16,9 @@
                               prefetch-count
                               prefetch-size
                               prefetch-global?]
-  :assert/connection? (some? connection)
   :this/as            *this*
+  :assert/connection? (some? connection)
+  :assert/components? (seq components)
   :channel            (channel/open connection *this*) #(channel/close %)
   :components/running (prepare-components *this*)
 

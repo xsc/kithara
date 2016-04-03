@@ -54,6 +54,7 @@
                             declare-queue?]
   :this/as            *this*
   :assert/connection? (some? connection)
+  :assert/components? (seq components)
   :declare-channel    (open-channel *this*) #(close-channel %)
   :queue              (make-queue *this*)
   :components/running (prepare-components *this*)

@@ -27,6 +27,7 @@
 
 (defcomponent ConnectionWrapper [components]
   :this/as            *this*
+  :assert/components? (seq components)
   :connection         (open-connection *this*) #(close-connection %)
   :components/running (prepare-components *this*)
 
