@@ -17,6 +17,7 @@
              {:dependencies [[ch.qos.logback/logback-classic "1.1.7"]
                              [org.slf4j/slf4j-api "1.7.20"]
                              [org.clojure/test.check "0.9.0"]]}
+             :silent-test {:resource-paths ["test-resources"]}
              :codox
              [:dev
               {:plugins [[lein-codox "0.9.4"]]
@@ -39,5 +40,7 @@
   :aliases {"codox"
             ["do"
              "with-profile" "+codox-consumers" "codox,"
-             "with-profile" "+codox-rabbitmq" "codox"]}
+             "with-profile" "+codox-rabbitmq" "codox"]
+            "silent-test"
+            ["with-profile" "+silent-test" "test"]}
   :pedantic? :abort)

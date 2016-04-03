@@ -3,6 +3,7 @@ services:
   - rabbitmq
 env:
   - RABBITMQ_HOST=127.0.0.1 RABBITMQ_PORT=5672
+script: lein2 silent-test
 jdk:
   - openjdk7
   - oraclejdk7
