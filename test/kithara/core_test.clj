@@ -50,11 +50,20 @@
   {:exchange     exchange
    :routing-keys ["#"]})
 
-(def queue-layer
+(def server-named-queue-layer
+  (test/stack-elements
+    [consumers options]
+    (kithara/with-server-named-queue consumers (->bindings options))))
+
+(def named-queue-layer
   (test/stack-elements
     [consumers {:keys [queue] :as options}]
-    (kithara/with-server-named-queue consumers (->bindings options))
     (kithara/with-queue consumers queue (->bindings options))))
+
+(def queue-layer
+  (gen/one-of
+    [server-named-queue-layer
+     named-queue-layer]))
 
 ;; ### Connection Layer
 
