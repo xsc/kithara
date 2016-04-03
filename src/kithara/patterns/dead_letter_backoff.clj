@@ -6,6 +6,7 @@
             [kithara
              [protocols :as p]
              [utils :as u]]
+            [manifold.deferred :as d]
             [clojure.tools.logging :as log]
             [peripheral.core :refer [defcomponent]]))
 
@@ -144,12 +145,9 @@
         "returning `nil` will be interpreted as ACK.")
       {:status :ack}))
 
-(defn- handle-with-backoff
-  [component handler message]
-  (let [message' (normalize-retried-message message)
-        result (-> message' handler normalize-result)
-        {:keys [status]} result
-        requeue? (get result :requeue? (= status :nack))]
+(defn- process-result!
+  [component message {:keys [status] :as result}]
+  (let [requeue? (get result :requeue? (= status :nack))]
     (if-not (= status :done)
       (if (and (contains? #{:nack :reject} status) requeue?)
         (do
@@ -157,6 +155,14 @@
           (assoc result :requeue? false))
         result)
       result)))
+
+(defn- handle-with-backoff
+  [component handler message]
+  (let [message' (normalize-retried-message message)]
+    (d/chain
+      (handler message')
+      normalize-result
+      #(process-result! component message %))))
 
 (defn- prepare-components
   [{:keys [components] :as component}]
@@ -303,12 +309,13 @@
    to be republished.
 
    See: https://www.rabbitmq.com/ttl.html"
-  [components & [{:keys [backoff-exchange retry-exchange queue]}]]
+  [components & [{:keys [backoff backoff-exchange retry-exchange queue]}]]
   (map->DLXConsumer
     {:components       (p/consumer-seq components)
      :backoff-exchange (as-exchange-map backoff-exchange)
      :retry-exchange   (as-exchange-map retry-exchange)
-     :queue            (as-queue-map queue)}))
+     :queue            (as-queue-map queue)
+     :backoff          backoff}))
 
 (defn with-durable-dead-letter-backoff
   "See [[with-dead-letter-backoff]]. Will create/expect durable, non-exclusive and
@@ -316,10 +323,11 @@
 
    Note that this makes only sense if the original consumer queue has the same
    properties, since otherwise you'll lose dead-lettered messages on retry."
-  [components & [{:keys [backoff-exchange retry-exchange queue]}]]
+  [components & [{:keys [backoff backoff-exchange retry-exchange queue]}]]
   (let [durify #(merge % {:durable? true, :exclusive? false, :auto-delete? false})]
     (map->DLXConsumer
       {:components       (p/consumer-seq components)
        :backoff-exchange (durify (as-exchange-map backoff-exchange))
        :retry-exchange   (durify (as-exchange-map retry-exchange))
-       :queue            (durify (as-queue-map queue))})))
+       :queue            (durify (as-queue-map queue))
+       :backoff          backoff})))
