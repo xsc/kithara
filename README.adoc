@@ -300,10 +300,83 @@ for recovery/retry semantics. By default, the connection will employ backing-off
 recovery (up to 60s) and immediate and unlimited retry.
 
 [[common-messaging-patterns]]
-== Common Messaging Patterns
+== Common Messaging Patterns and Scenarios
 
 Kithara aims to provide easily usable implementations for common messaging
 patterns and scenarios.
+
+[[multiple-consumers]]
+=== Multiple Consumers
+
+Every `with-*` function takes either a single component or a seq of them,
+allowing your topology to "branch out" however you desire.
+
+For example, you can parallelise processing by adding multiple identical
+consumers to a channel:
+
+[source,clojure]
+----
+(-> (repeat 5 (k/consumer ...))
+    (k/with-channel ...)
+    ...)
+----
+
+Although, following the one-channel-per-thread model, it should probably look
+like this:
+
+[source,clojure]
+----
+(-> (k/consumer ...))
+    (k/with-channel ...)
+    (->> (repeat 5))
+    ...)
+----
+
+It would be just as easy to have two completely independent consumers on the
+same connection:
+
+[source,clojure]
+----
+(def consumer-1
+  (-> (k/consumer ...)
+      (k/with-channel ...)
+      (k/with-queue "consumer-1")))
+
+(def consumer-2
+  (-> (k/consumer ...)
+      (k/with-channel ...)
+      (k/with-queue "consumer-2")))
+
+(def consumer
+  (k/with-connection
+    [consumer-1 consumer-2]
+    ...))
+----
+
+You have full control over who shares what, on each layer of the consumer stack.
+
+[[multi-threaded-consumers]]
+=== Multi-Threaded Consumers
+
+http://xsc.github.io/kithara/kithara.patterns.threads.html[*Documentation*]
+
+In some cases you might want to declare just a single consumer but dispatch
+message processing to a number of worker threads. This functionality is offered
+by
+http://xsc.github.io/kithara/kithara.patterns.threads.html#var-with-threads[`with-threads`]
+which will setup and teardown a fixed-size thread pool for one or more
+consumers:
+
+[source,clojure]
+----
+(require '[kithara.patterns.threads :refer [with-threads])
+
+(defonce rabbitmq-consumer-with-backoff
+  (-> (k/consumer ...)
+      (with-threads 4)
+      (k/with-queue ...)
+      ...))
+----
 
 [[dead-letter-backoff]]
 === Backoff via Dead-Letter-Queues
