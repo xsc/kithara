@@ -1,0 +1,11 @@
+<configuration>
+    <logger name="net.jodah.lyra.internal" level="warn" />
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} [${HOSTNAME}] [%logger{36}] %-5level - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <root level="debug">
+        <appender-ref ref="stdout" />
+    </root>
+</configuration>
