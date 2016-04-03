@@ -20,7 +20,7 @@
 
 ;; ## Tests
 
-(defspec t-threaded-consumer 100
+(defspec t-threaded-consumers 100
   (test/consumer-property
     (gen/one-of
       [;; thread-pool per consumer
