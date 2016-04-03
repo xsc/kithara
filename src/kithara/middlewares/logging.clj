@@ -8,9 +8,14 @@
     "[" consumer-name "]"
     (when consumer-tag
       (str " [" consumer-tag "]"))
-    (some->> (:status result)
-             (name)
-             (format " [%s]"))))
+    (if-let [status (:status result)]
+      (if (contains? result :requeue?)
+        (format " [%s] <%s>"
+                (name status)
+                (if (:requeue? result)
+                  "requeue"
+                  "drop"))
+        (format " [%s]" (name status))))))
 
 (defn- make-log-info
   [{:keys [exchange routing-key body-raw]}]
