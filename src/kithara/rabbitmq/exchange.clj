@@ -36,3 +36,8 @@
     (boolean auto-delete?)
     (u/stringify-keys1 arguments))
   (->Exchange channel exchange-name exchange-type))
+
+(defn delete
+  "Delete a RabbitMQ exchange based on the return value of `declare`."
+  [{:keys [^Channel channel ^String exchange-name]}]
+  (.exchangeDelete channel exchange-name))
