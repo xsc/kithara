@@ -34,11 +34,12 @@
    (prop/for-all
      [confirmations (gen/vector confirmations/gen 1 message-count)]
      (let [message-tracker (handler/make-tracker)
-           message-handler (handler/make message-tracker)]
-       (p/with-start [_ (stack-build-fn
-                          message-handler
-                          (fix/connection-config)
-                          (fix/exchange-name))]
+           message-handler (handler/make message-tracker)
+           stack (stack-build-fn
+                   message-handler
+                   (fix/connection-config)
+                   (fix/exchange-name))]
+       (p/with-start [_ stack]
          (doseq [sq confirmations]
            (publish! message-tracker sq))
          (and (handler/wait-for-messages! message-tracker wait-ms)
