@@ -11,7 +11,7 @@
                  [com.rabbitmq/amqp-client "3.6.1" :scope "provided"]
                  [peripheral "0.5.0"]
                  [flake "0.3.1"]
-                 [manifold "0.1.3"]
+                 [manifold "0.1.4"]
                  [potemkin "0.4.3"]]
   :profiles {:dev
              {:dependencies [[ch.qos.logback/logback-classic "1.1.7"]
