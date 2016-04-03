@@ -25,7 +25,9 @@
 (defn connection-config
   []
   {:host rabbitmq-host
-   :port rabbitmq-port})
+   :port rabbitmq-port
+   :recovery-policy :never
+   :retry-policy    :never})
 
 (defn exchange-name
   []

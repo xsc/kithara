@@ -7,6 +7,8 @@
              [fixtures :as fix]
              [handler :as handler]]
             [kithara.utils :refer [random-string]]
+            [clojure.pprint :as pprint]
+            [clojure.tools.logging :as log]
             [peripheral.core :as p]))
 
 ;; ## Publish Logic
@@ -23,22 +25,35 @@
 
 ;; ## Property
 
+(defn- log-stack!
+  [forms]
+  (binding [pprint/*print-pprint-dispatch* pprint/code-dispatch]
+    (->> forms
+         (concat '[-> message-handler])
+         (pprint/pprint)
+         ^String (with-out-str)
+         (.trim)
+         (log/debugf "[stack under test]%n%s"))))
+
 (defn consumer-property
-  ([stack-build-fn] (consumer-property {} stack-build-fn))
+  ([stack-gen] (consumer-property {} stack-gen))
   ([{:keys [message-count wait-ms]
      :or {message-count 5
           wait-ms 2000}}
-    stack-build-fn]
+    stack-gen]
    {:pre [(pos? message-count)
           (pos? wait-ms)]}
    (prop/for-all
-     [confirmations (gen/vector confirmations/gen 1 message-count)]
+     [confirmations            (gen/vector confirmations/gen 1 message-count)
+      {:keys [forms build-fn]} stack-gen]
+     (log-stack! forms)
      (let [message-tracker (handler/make-tracker)
            message-handler (handler/make message-tracker)
-           stack (stack-build-fn
+           stack (build-fn
                    message-handler
-                   (fix/connection-config)
-                   (fix/exchange-name))]
+                   {:connection (fix/connection-config)
+                    :queue      (random-string)
+                    :exchange   (fix/exchange-name)})]
        (p/with-start [_ stack]
          (doseq [sq confirmations]
            (publish! message-tracker sq))

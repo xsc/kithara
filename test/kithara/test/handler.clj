@@ -1,5 +1,6 @@
 (ns kithara.test.handler
-  (:require [kithara.test.fixtures :as fix])
+  (:require [kithara.test.fixtures :as fix]
+            [clojure.tools.logging :as log])
   (:import [java.util.concurrent CountDownLatch TimeUnit]))
 
 ;; ## Concept
@@ -65,20 +66,17 @@
   [message-tracker wait-ms]
   (Thread/sleep (quot wait-ms 10))
   (let [fut (future
-              (doseq [[routing-key data] @message-tracker]
-                (assert
-                  (.await
-                    ^CountDownLatch (:countdown-latch data)
-                    wait-ms
-                    TimeUnit/MILLISECONDS)
-                  (format "message '%s' was not consumed within %dms: %s"
-                          routing-key
-                          wait-ms
-                          (pr-str data)))))]
-    (assert (not= ::timeout (deref fut (long (* 1.5 wait-ms)) ::timeout))
-            (format "test messages failed to be consumed within %dms."
-                    wait-ms))
-    true))
+              (->> (for [[routing-key data] @message-tracker]
+                     (or (.await
+                           ^CountDownLatch (:countdown-latch data)
+                           wait-ms
+                           TimeUnit/MILLISECONDS)
+                         (log/warnf "message '%s' was not consumed within %dms: %s"
+                                    routing-key
+                                    wait-ms
+                                    (pr-str data))))
+                   (every? true?)))]
+    (deref fut (long (* 1.5 wait-ms)) nil)))
 
 (defn verify-expectations!
   [message-tracker]

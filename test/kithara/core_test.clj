@@ -9,90 +9,68 @@
 
 (test/use-rabbitmq-fixtures)
 
-;; ## Generate a Stack
+;; ## Stack Layers
 
-;; ### Helper
+;; ### Clone Layer
 
-(defn maybe-seq
-  ([element-gen]
-   (maybe-seq element-gen 2))
-  ([element-gen max-count]
-   (gen/let [c (gen/fmap (comp inc #(mod % max-count)) gen/nat)]
-     (if (= c 1)
-       element-gen
-       (->> (gen/vector element-gen c)
-            (gen/fmap
-              (fn [fs]
-                (fn [& args]
-                  (mapv #(apply % args) fs)))))))))
+(def clone-layer
+  (->> gen/nat
+       (gen/fmap #(mod % 3))
+       (gen/fmap inc)
+       (gen/fmap
+         (fn [multiplier]
+           {:build-fn (fn [consumer _]
+                        (if (= multiplier 1)
+                          consumer
+                          (repeat multiplier consumer)))
+            :forms (if (> multiplier 1)
+                     [(list 'clone multiplier)])}))))
 
-(defmacro gen-fn-elements
-  [bindings & options]
-  `(gen/elements
-     [~@(for [form options]
-          `(fn [~@bindings] ~form))]))
+;; ### Consumer Layer
 
-;; ### Consumer(s)
+(def consumer-layer
+  (test/stack-elements
+    [message-handler _]
+    (kithara/consumer message-handler)
+    (kithara/consumer message-handler {:consumer-name (random-string)})))
 
-(def consumer-gen
-  (maybe-seq
-    (gen-fn-elements
-      [message-handler & _]
-      (kithara/consumer message-handler)
-      (kithara/consumer message-handler {:consumer-name (random-string)}))))
+;; ### Channel Layer
 
-;; ### Queue
+(def channel-layer
+  (gen/let [prefetch-count (gen/fmap #(+ (mod % 1024) 128) gen/nat)]
+    (test/stack-elements
+      [consumers _]
+      (kithara/with-channel consumers)
+      (kithara/with-prefetch-channel consumers prefetch-count))))
+
+;; ### Queue Layer
 
 (defn- ->bindings
-  [exchange]
+  [{:keys [exchange]}]
   {:exchange     exchange
    :routing-keys ["#"]})
 
-(def queue-gen
-  (gen-fn-elements
-    [consumers _ exchange]
-    (kithara/with-server-named-queue consumers (->bindings exchange))
-    (kithara/with-queue consumers (random-string) (->bindings exchange))))
+(def queue-layer
+  (test/stack-elements
+    [consumers {:keys [queue] :as options}]
+    (kithara/with-server-named-queue consumers (->bindings options))
+    (kithara/with-queue consumers queue (->bindings options))))
 
-;; ### Channel(s)
+;; ### Connection Layer
 
-(def channel-gen
-  (maybe-seq
-    (gen/let [prefetch-count (gen/fmap #(+ (mod % 1024) 128) gen/nat)]
-      (gen-fn-elements
-        [consumers & _]
-        (kithara/with-channel consumers)
-        (kithara/with-channel consumers {:channel-index 1})
-        (kithara/with-prefetch-channel consumers prefetch-count)))))
-
-;; ### Connection
-
-(def connection-gen
-  (gen-fn-elements
-    [consumers connection & _]
+(def connection-layer
+  (test/stack-elements
+    [consumers {:keys [connection]}]
     (kithara/with-connection consumers connection)))
-
-;; ### Bring it together!
-
-(def consumer-stack-gen
-  "Generate a consumer stack based on a single queue."
-  (gen/let [make-consumer   consumer-gen
-            make-queue      queue-gen
-            make-channel    channel-gen
-            make-connection connection-gen]
-    (gen/return
-      (fn [message-handler connection exchange]
-        (reduce
-          #(%2 %1 connection exchange)
-          message-handler
-          [make-consumer
-           make-channel
-           make-queue
-           make-connection])))))
 
 ;; ## Tests
 
-(defspec t-consumer 100
-  (gen/bind
-    consumer-stack-gen
-    test/consumer-property))
+(defspec t-basic-consumers 100
+  (test/consumer-property
+    (test/stack-gen
+      consumer-layer
+      clone-layer
+      channel-layer
+      clone-layer
+      queue-layer
+      connection-layer)))
