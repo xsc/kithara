@@ -134,12 +134,12 @@
 
 (defn ^:no-doc hide
   [data]
-  (with-meta '<hidden> ::secret data))
+  (with-meta '<hidden> {::secret data}))
 
 (defn ^:no-doc reveal
   [data]
   {:pre [(= data '<hidden>)]}
-  (-> data meta ::scret))
+  (-> data meta ::secret))
 
 (defmacro ^:no-doc hide-constructors
   [record]
