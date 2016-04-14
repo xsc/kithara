@@ -22,10 +22,18 @@
 (def ^:private rabbitmq-port
   (Long. (or (System/getenv "RABBITMQ_PORT") "5672")))
 
+(def ^:private rabbitmq-user
+  (or (System/getenv "RABBITMQ_USER") "guest"))
+
+(def ^:private rabbitmq-password
+  (or (System/getenv "RABBITMQ_PASSWORD") "guest"))
+
 (defn connection-config
   []
   {:host rabbitmq-host
    :port rabbitmq-port
+   :username rabbitmq-user
+   :password rabbitmq-password
    :recovery-policy :never
    :retry-policy    :never})
 
