@@ -10,7 +10,7 @@
                  [net.jodah/lyra "0.5.2"]
                  [com.rabbitmq/amqp-client "3.6.1" :scope "provided"]
                  [peripheral "0.5.0"]
-                 [flake "0.3.1"]
+                 [flake "0.3.2"]
                  [manifold "0.1.4"]
                  [potemkin "0.4.3"]]
   :profiles {:dev
