@@ -35,7 +35,7 @@
 
 ;; ## Wrapper
 
-(defn with-env
+(defn ^{:added "0.1.2"} with-env
   "Let each message have an `:env` key with the message handling environment.
    It is possible to `assoc` more keys into the resulting component before
    startup, allowing it to participate in `com.stuartsierra/component` systems,

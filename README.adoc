@@ -305,6 +305,71 @@ recovery (up to 60s) and immediate and unlimited retry.
 Kithara aims to provide easily usable implementations for common messaging
 patterns and scenarios.
 
+[[environment]]
+=== Environment and External Resources
+
+http://xsc.github.io/kithara/kithara.core.html#var-with-env[*Documentation*]
+
+Usually, messages trigger some kind of change to the world, i.e. writing to a DB,
+starting of some pre-defined task, etc ... And the "world" these changes rely on
+needs to be available to the message handler. There are generally two ways
+this can be achieved.
+
+*Closures*: the message handler function can close over its dependencies, no
+matter whether they are available as global variables (like in
+https://github.com/tolitius/mount[mount]) or parameters to a constructor
+function:
+
+[source,clojure]
+----
+(defn build-message-handler
+  [database]
+  (fn [message]
+    (write! database message)
+    {:status :ack}))
+
+(defonce closure-rabbitmq-consumer
+  (-> (build-message-handler my-database)
+      (k/consumer ...)
+      ...))
+----
+
+*Injection*: the environment can be passed to the message handler directly
+within the message map, facilitated by kithara's `with-env` function:
+
+[source,clojure]
+----
+(defn message-handler
+  [{:keys [env] :as message}]
+  (write! (:database env) message)
+  {:status :ack})
+
+(defonce injection-rabbitmq-consumer
+  (-> (k/consumer message-handler)
+      ...
+      (k/with-env {:database my-database})))
+----
+
+The `with-env` wrapper plays nicely with the
+https://github.com/stuartsierra/component[component] library since it allows
+for arbitrary keys to be added to the environment using plain `assoc`, making
+it possible to employ consumers in component systems:
+
+[source,clojure]
+----
+(defonce system
+  (component/system-map
+    :consumer (-> message-handler
+                  (k/consumer ...)
+                  ...
+                  (k/with-env)
+                  (component/using [:db :elastic]))
+    :db       (map->DB {...})
+    :elastic  (map->ES {...})))
+----
+
+Note that `with-env` has to be on the top-level for this to work.
+
 [[multiple-consumers]]
 === Multiple Consumers
 
