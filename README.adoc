@@ -308,8 +308,6 @@ patterns and scenarios.
 [[environment]]
 === Environment and External Resources
 
-http://xsc.github.io/kithara/kithara.core.html#var-with-env[*Documentation*]
-
 Usually, messages trigger some kind of change to the world, i.e. writing to a DB,
 starting of some pre-defined task, etc ... And the "world" these changes rely on
 needs to be available to the message handler. There are several ways
@@ -337,6 +335,8 @@ function:
 ----
 
 ==== Dependency Injection
+
+http://xsc.github.io/kithara/kithara.core.html#var-with-env[*Documentation*]
 
 The environment can be passed to the message handler directly
 within the message map, facilitated by kithara's `with-env` function:
