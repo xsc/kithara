@@ -374,6 +374,7 @@ it possible to employ consumers in component systems:
 
 Note that `with-env` has to be on the top-level for this to work.
 
+[[dependency-injection-wrapper-component]]
 ==== Wrapper Component (recommended)
 
 A combination of the two previous approaches uses an outer component to gather
