@@ -312,10 +312,10 @@ http://xsc.github.io/kithara/kithara.core.html#var-with-env[*Documentation*]
 
 Usually, messages trigger some kind of change to the world, i.e. writing to a DB,
 starting of some pre-defined task, etc ... And the "world" these changes rely on
-needs to be available to the message handler. There are generally two ways
+needs to be available to the message handler. There are several ways
 this can be achieved.
 
-*Closures*: the message handler function can close over its dependencies, no
+*Closure*: the message handler function can close over its dependencies, no
 matter whether they are available as global variables (like in
 https://github.com/tolitius/mount[mount]) or parameters to a constructor
 function:
@@ -345,7 +345,8 @@ within the message map, facilitated by kithara's `with-env` function:
   {:status :ack})
 
 (defonce injection-rabbitmq-consumer
-  (-> (k/consumer message-handler)
+  (-> message-handler
+      (k/consumer ...)
       ...
       (k/with-env {:database my-database})))
 ----
@@ -363,12 +364,32 @@ it possible to employ consumers in component systems:
                   (k/consumer ...)
                   ...
                   (k/with-env)
-                  (component/using [:db :elastic]))
-    :db       (map->DB {...})
-    :elastic  (map->ES {...})))
+                  (component/using [:database]))
+    :database (map->DB {...})))
 ----
 
 Note that `with-env` has to be on the top-level for this to work.
+
+*Closure via Wrapper Component*: a combination of the two approaches uses an
+outer component to gather the environment, then builds the consumer internally
+on startup. https://github.com/stuartsierra/component[peripheral]'s
+`defcomponent` will let you formulate this concisely (but note that it can be
+done with plain https://github.com/stuartsierra/component[component] just as
+well):
+
+[source,clojure]
+----
+(defcomponent Consumer [database]
+  :message-handler    (build-message-handler database)
+  :component/consumer (-> message-handler
+                          (k/consumer ...)
+                          ...))
+
+(defonce system
+  (component/system-map
+    :consumer (component/using (map->Consumer {}) [:database])
+    :database (map->DB {...})))
+----
 
 [[multiple-consumers]]
 === Multiple Consumers
