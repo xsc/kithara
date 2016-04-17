@@ -16,5 +16,6 @@
    consumer-property]
 
   [kithara.test.stack
+   optional-stack-elements
    stack-gen
    stack-elements])

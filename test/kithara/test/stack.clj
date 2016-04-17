@@ -22,3 +22,9 @@
      [~@(for [form options]
           `{:forms    [(quote ~(cons (first form) (next (next form))))]
             :build-fn (fn [~@bindings] ~form)})]))
+
+(defmacro optional-stack-elements
+  [bindings & options]
+  `(gen/one-of
+     [(gen/return nil)
+      (stack-elements ~bindings ~@options)]))

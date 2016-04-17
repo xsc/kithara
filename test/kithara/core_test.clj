@@ -75,12 +75,10 @@
 ;; ### Env Layer
 
 (def env-layer
-  (gen/one-of
-    [(test/stack-elements
-       [consumers _]
-       (kithara/with-env consumers)
-       (kithara/with-env consumers {:db {:host "db"}}))
-     (gen/return nil)]))
+  (test/optional-stack-elements
+    [consumers _]
+    (kithara/with-env consumers)
+    (kithara/with-env consumers {:db {:host "db"}})))
 
 ;; ## Tests
 
