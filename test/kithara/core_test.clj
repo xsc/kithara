@@ -74,10 +74,20 @@
 
 ;; ### Env Layer
 
+(defn has-env?
+  [{:keys [env]}]
+  (= env {:db {:host "db"}}))
+
+(defn has-empty-env?
+  [{:keys [env]}]
+  (empty? env))
+
 (def env-layer
   (test/optional-stack-elements
     [consumers _]
+    ^{:verifiers [has-empty-env?]}
     (kithara/with-env consumers)
+    ^{:verifiers [has-env?]}
     (kithara/with-env consumers {:db {:host "db"}})))
 
 ;; ## Tests
