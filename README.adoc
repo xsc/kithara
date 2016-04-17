@@ -374,7 +374,7 @@ it possible to employ consumers in component systems:
 
 Note that `with-env` has to be on the top-level for this to work.
 
-==== Dependency Injection using Wrapper Component
+==== Wrapper Component (recommended)
 
 A combination of the two previous approaches uses an outer component to gather
 the environment, then builds the consumer internally on startup.
@@ -395,6 +395,21 @@ https://github.com/stuartsierra/component[component] just as well):
     :consumer (component/using (map->Consumer {}) [:database])
     :database (map->DB {...})))
 ----
+
+Or using `with-env`:
+
+[source,clojure]
+----
+(defcomponent Consumer [database]
+  :component/consumer
+  (-> message-handler
+      (k/consumer ...)
+      ...
+      (k/with-env {:database database})))
+----
+
+This approach arguably offers the most flexibility since building the stack is
+explicit and thus completely under your control.
 
 [[multiple-consumers]]
 === Multiple Consumers
