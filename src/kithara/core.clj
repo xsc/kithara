@@ -4,6 +4,7 @@
              [base-consumer :as base-consumer]
              channel-wrapper
              connection-wrapper
+             env-wrapper
              publisher
              queue-wrapper]
             [potemkin :refer [import-vars]]))
@@ -16,6 +17,8 @@
    with-prefetch-channel]
   [kithara.components.connection-wrapper
    with-connection]
+  [kithara.components.env-wrapper
+   with-env]
   [kithara.components.publisher
    publisher]
   [kithara.components.queue-wrapper
