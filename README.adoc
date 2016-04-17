@@ -315,7 +315,9 @@ starting of some pre-defined task, etc ... And the "world" these changes rely on
 needs to be available to the message handler. There are several ways
 this can be achieved.
 
-*Closure*: the message handler function can close over its dependencies, no
+==== Closures
+
+The message handler function can close over its dependencies, no
 matter whether they are available as global variables (like in
 https://github.com/tolitius/mount[mount]) or parameters to a constructor
 function:
@@ -334,7 +336,9 @@ function:
       ...))
 ----
 
-*Injection*: the environment can be passed to the message handler directly
+==== Dependency Injection
+
+The environment can be passed to the message handler directly
 within the message map, facilitated by kithara's `with-env` function:
 
 [source,clojure]
@@ -370,12 +374,13 @@ it possible to employ consumers in component systems:
 
 Note that `with-env` has to be on the top-level for this to work.
 
-*Closure via Wrapper Component*: a combination of the two approaches uses an
-outer component to gather the environment, then builds the consumer internally
-on startup. https://github.com/stuartsierra/component[peripheral]'s
-`defcomponent` will let you formulate this concisely (but note that it can be
-done with plain https://github.com/stuartsierra/component[component] just as
-well):
+==== Dependency Injection using Wrapper Component
+
+A combination of the two previous approaches uses an outer component to gather
+the environment, then builds the consumer internally on startup.
+https://github.com/stuartsierra/component[peripheral]'s `defcomponent` will let
+you formulate this concisely (but note that it can be done with plain
+https://github.com/stuartsierra/component[component] just as well):
 
 [source,clojure]
 ----
