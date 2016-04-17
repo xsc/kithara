@@ -72,6 +72,16 @@
     [consumers {:keys [connection]}]
     (kithara/with-connection consumers connection)))
 
+;; ### Env Layer
+
+(def env-layer
+  (gen/one-of
+    [(test/stack-elements
+       [consumers _]
+       (kithara/with-env consumers)
+       (kithara/with-env consumers {:db {:host "db"}}))
+     (gen/return nil)]))
+
 ;; ## Tests
 
 (defspec t-basic-consumers 100
@@ -82,4 +92,5 @@
       channel-layer
       clone-layer
       queue-layer
-      connection-layer)))
+      connection-layer
+      env-layer)))
