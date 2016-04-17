@@ -10,7 +10,9 @@
       {:forms    (vec (mapcat :forms results))
        :build-fn #(reduce
                     (fn [value {:keys [build-fn]}]
-                      (build-fn value %2))
+                      (if build-fn
+                        (build-fn value %2)
+                        value))
                     %1 results)})
     (apply gen/tuple stack-gens)))
 
