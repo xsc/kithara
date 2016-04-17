@@ -44,11 +44,11 @@
    {:pre [(pos? message-count)
           (pos? wait-ms)]}
    (prop/for-all
-     [confirmations            (gen/vector confirmations/gen 1 message-count)
-      {:keys [forms build-fn]} stack-gen]
+     [confirmations (gen/vector confirmations/gen 1 message-count)
+      {:keys [forms verifiers build-fn]} stack-gen]
      (log-stack! forms)
      (let [message-tracker (handler/make-tracker)
-           message-handler (handler/make message-tracker)
+           message-handler (handler/make message-tracker verifiers)
            stack (build-fn
                    message-handler
                    {:connection (fix/connection-config)

@@ -26,9 +26,14 @@
 ;; ### Handler
 
 (defn make
-  [message-tracker]
+  [message-tracker verifiers]
   (let [state (atom {})]
-    (fn [{:keys [routing-key body-raw]}]
+    (fn [{:keys [routing-key body-raw] :as message}]
+      (doseq [[verifier-key f] verifiers]
+        (when-not (f message)
+          (swap! message-tracker
+                 update-in [::unverified verifier-key]
+                 conj message)))
       (let [seen->confirmation (-> body-raw (String. "UTF-8") read-string)
             seen-before (-> state
                             (swap! update routing-key (fnil inc -1))
@@ -66,7 +71,7 @@
   [message-tracker wait-ms]
   (Thread/sleep (quot wait-ms 10))
   (let [fut (future
-              (->> (for [[routing-key data] @message-tracker]
+              (->> (for [[routing-key data] (dissoc @message-tracker ::unverified)]
                      (or (.await
                            ^CountDownLatch (:countdown-latch data)
                            wait-ms
@@ -78,12 +83,23 @@
                    (every? true?)))]
     (deref fut (long (* 1.5 wait-ms)) nil)))
 
+(defn- verify-messages!
+  [message-tracker]
+  (let [unverified (::unverified @message-tracker)]
+    (or (empty? unverified)
+        (doseq [[verifier-key messages] unverified]
+          (log/warnf "%d messages failed verification '%s', first: %s"
+                     (count messages)
+                     verifier-key
+                     (pr-str (first messages)))))))
+
 (defn verify-expectations!
   [message-tracker]
-  (->> (for [[routing-key {:keys [expected-confirmations confirmations]}]
-             @message-tracker]
-         (= expected-confirmations confirmations))
-       (every? true?)))
+  (and (verify-messages! message-tracker)
+       (->> (for [[routing-key {:keys [expected-confirmations confirmations]}]
+                  (dissoc @message-tracker ::unverified)]
+              (= expected-confirmations confirmations))
+            (every? true?))))
 
 ;; ### Message
 
