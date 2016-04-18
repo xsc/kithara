@@ -1,7 +1,8 @@
 (ns kithara.core
   "Public API for simple RabbitMQ consumer creation."
   (:require [kithara.components
-             [base-consumer :as base-consumer]
+             base-consumer
+             batching-consumer
              channel-wrapper
              connection-wrapper
              env-wrapper
@@ -12,6 +13,8 @@
 (import-vars
   [kithara.components.base-consumer
    consumer]
+  [kithara.components.batching-consumer
+   batching-consumer]
   [kithara.components.channel-wrapper
    with-channel
    with-prefetch-channel]
