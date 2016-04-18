@@ -16,7 +16,8 @@
   :profiles {:dev
              {:dependencies [[ch.qos.logback/logback-classic "1.1.7"]
                              [org.slf4j/slf4j-api "1.7.20"]
-                             [org.clojure/test.check "0.9.0"]]}
+                             [org.clojure/test.check "0.9.0"]
+                             [io.aviso/pretty "0.1.26"]]}
              :silent-test {:resource-paths ["test-resources"]}
              :codox
              [:dev

@@ -28,11 +28,21 @@
 
 ;; ### Consumer Layer
 
+(defn- ->batching
+  [message-handler]
+  #(map message-handler %))
+
 (def consumer-layer
   (test/stack-elements
     [message-handler _]
     (kithara/consumer message-handler)
-    (kithara/consumer message-handler {:consumer-name (random-string)})))
+    (kithara/consumer message-handler {:consumer-name (random-string)})
+    (kithara/batching-consumer (->batching message-handler))
+    (kithara/batching-consumer
+      (->batching message-handler)
+      {:consumer-name (random-string)
+       :batch-size    2
+       :interval-ms   50})))
 
 ;; ### Channel Layer
 
@@ -92,7 +102,7 @@
 
 ;; ## Tests
 
-(defspec t-basic-consumers 100
+(defspec t-basic-consumers 150
   (test/consumer-property
     (test/stack-gen
       consumer-layer
