@@ -188,6 +188,13 @@
 (defn ^{:added "0.1.2"} batching-consumer
   "Generate a consumer component based on the given batch processing function.
 
+   - `:batch-size`: the maximum size of a single batch,
+   - `:interval-ms`: the maximum time between the processing of two batches,
+   - `:offer-timeout-ms`: the maximum waiting time for a spot in the queue,
+   - `:queue-size`: the capacity of the internal `BlockingQueue`.
+
+   All [[consumer]] options are allowed as well.
+
    The batch processing function gets a seq of messages and produces either:
 
    - a single confirmation map for all messages, or
@@ -208,10 +215,15 @@
           offer-timeout-ms 1000
           queue-size       256}
      :as opts}]
-   (map->BatchingConsumer
-     {:batch-handler    batch-handler
-      :offer-timeout-ms offer-timeout-ms
-      :batch-size       batch-size
-      :interval-ms      interval-ms
-      :queue-size       queue-size
-      :opts             (dissoc opts :batch-size :offer-timeout-ms)})))
+   (let [consumer-opts (dissoc opts
+                               :batch-size
+                               :interval-ms
+                               :offer-timeout-ms
+                               :queue-size)]
+     (map->BatchingConsumer
+       {:batch-handler    batch-handler
+        :offer-timeout-ms offer-timeout-ms
+        :batch-size       batch-size
+        :interval-ms      interval-ms
+        :queue-size       queue-size
+        :opts             consumer-opts}))))
