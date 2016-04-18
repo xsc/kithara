@@ -1,6 +1,7 @@
 (ns kithara.test.handler
   (:require [kithara.test.fixtures :as fix]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [io.aviso.ansi :as ansi])
   (:import [java.util.concurrent CountDownLatch TimeUnit]))
 
 ;; ## Concept
@@ -22,6 +23,12 @@
 ;; down a `CountDownLatch` and store the results.
 
 ;; ## Implementation
+
+;; ## Helper
+
+(defmacro warnf
+  [fmt & parts]
+  `(log/warnf (ansi/yellow ~fmt) ~@parts))
 
 ;; ### Handler
 
@@ -76,10 +83,10 @@
                            ^CountDownLatch (:countdown-latch data)
                            wait-ms
                            TimeUnit/MILLISECONDS)
-                         (log/warnf "message '%s' was not consumed within %dms: %s"
-                                    routing-key
-                                    wait-ms
-                                    (pr-str data))))
+                         (warnf "message '%s' was not consumed within %dms: %s"
+                                routing-key
+                                wait-ms
+                                (pr-str data))))
                    (every? true?)))]
     (deref fut (long (* 1.5 wait-ms)) nil)))
 
@@ -88,10 +95,10 @@
   (let [unverified (::unverified @message-tracker)]
     (or (empty? unverified)
         (doseq [[verifier-key messages] unverified]
-          (log/warnf "%d messages failed verification '%s', first: %s"
-                     (count messages)
-                     verifier-key
-                     (pr-str (first messages)))))))
+          (warnf "%d messages failed verification '%s', first: %s"
+                 (count messages)
+                 verifier-key
+                 (pr-str (first messages)))))))
 
 (defn verify-expectations!
   [message-tracker]
