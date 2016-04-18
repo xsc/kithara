@@ -8,14 +8,14 @@
   :dependencies [[org.clojure/clojure "1.8.0" :scope "provided"]
                  [org.clojure/tools.logging "0.3.1"]
                  [net.jodah/lyra "0.5.2"]
-                 [com.rabbitmq/amqp-client "3.6.1" :scope "provided"]
-                 [peripheral "0.5.0"]
+                 [com.rabbitmq/amqp-client "3.6.1"]
+                 [peripheral "0.5.2"]
                  [flake "0.3.2"]
                  [manifold "0.1.4"]
                  [potemkin "0.4.3"]]
   :profiles {:dev
              {:dependencies [[ch.qos.logback/logback-classic "1.1.7"]
-                             [org.slf4j/slf4j-api "1.7.20"]
+                             [org.slf4j/slf4j-api "1.7.21"]
                              [org.clojure/test.check "0.9.0"]
                              [io.aviso/pretty "0.1.26"]]}
              :silent-test {:resource-paths ["test-resources"]}
