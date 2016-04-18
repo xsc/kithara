@@ -23,6 +23,10 @@ toc::[]
 
 image:https://img.shields.io/clojars/v/kithara.svg["Clojars Project", link="https://clojars.org/kithara"]
 
+Note that you might want to additionally include an
+http://www.slf4j.org[slf4j]-compliant logging implementation, e.g.
+http://logback.qos.ch[logback].
+
 *REPL*
 
 [source,clojure]
