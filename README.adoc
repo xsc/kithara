@@ -485,6 +485,36 @@ consumers:
       ...))
 ----
 
+[[message-batching]]
+=== Message Batching
+
+http://xsc.github.io/kithara/kithara.core.html#var-batching-consumer[*Documentation*]
+
+Sometimes, throughput can be gained by batchwise processing of messages (i.e.
+by bundling writes to a datastore), which can be achieved using kithara's
+http://xsc.github.io/kithara/kithara.core.html#var-batching-consumer[`batching-consumer`],
+a drop-in replacement for the default consumer:
+
+[source,clojure]
+----
+(defn batch-handler
+  [messages]
+  ...
+  {:status :ack})
+
+(defonce rabbitmq-batching-consumer
+  (-> batch-handler
+      (k/batching-consumer
+        {:as :string
+         :consumer-name "badger"
+         :batch-size 10})
+      ...))
+----
+
+The batch handler can return either a single confirmation or a seq of them for
+more nuanced processing. See the docstring of `batching-consumer` for more
+details.
+
 [[dead-letter-backoff]]
 === Backoff via Dead-Letter-Queues
 
