@@ -51,12 +51,14 @@
   "Fetch a batch of tasks "
   [{:keys [^BlockingQueue queue
            ^ArrayList buffer
-           batch-size]}]
-  (let [task-count (.drainTo queue buffer batch-size)]
-    (when (pos? task-count)
-      (let [tasks (into [] buffer)]
-        (.clear buffer)
-        tasks))))
+           batch-size]}
+   min-batch-size]
+  (when (>= (.size queue) min-batch-size)
+    (let [task-count (.drainTo queue buffer batch-size)]
+      (when (pos? task-count)
+        (let [tasks (into [] buffer)]
+          (.clear buffer)
+          tasks)))))
 
 (defn- wait-for-messages!
   [{:keys [queue interval-ms]}]
@@ -86,13 +88,23 @@
   tasks)
 
 (defn- handle-batch!
-  [component]
+  [component & [{:keys [min-batch-size] :or {min-batch-size 1}}]]
   (try
-    (some->> (fetch-tasks! component)
+    (some->> (fetch-tasks! component min-batch-size)
              (process-messages! component)
              (seq))
     (catch Throwable t
       (log/errorf t "uncaught exception in batchwise message handling."))))
+
+(defn- handle-full-batches!
+  [{:keys [batch-size] :as component}]
+  (while (handle-batch! component {:min-batch-size batch-size})))
+
+(defn- consume-queue!
+  "This will process as many full batches as possible from the queue."
+  [{:keys [batch-size] :as component}]
+  (when (handle-batch! component)
+    (handle-full-batches! component)))
 
 (defn- drain-queue!
   [component]
@@ -103,12 +115,12 @@
 (defn- run-scheduler-loop!
   [{:keys [shutdown? wait-promise] :as component}]
   (try
-    (drain-queue! component)
     (loop []
       (wait-for-messages! component)
-      (drain-queue! component)
+      (consume-queue! component)
       (when-not @shutdown?
         (recur)))
+    (drain-queue! component)
     (finally
       (deliver wait-promise nil))))
 
