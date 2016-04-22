@@ -227,6 +227,11 @@
           offer-timeout-ms 1000
           queue-size       256}
      :as opts}]
+   {:pre [(pos? batch-size)
+          (pos? interval-ms)
+          (pos? offer-timeout-ms)
+          (pos? queue-size)
+          (>= queue-size batch-size)]}
    (let [consumer-opts (dissoc opts
                                :batch-size
                                :interval-ms
