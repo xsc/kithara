@@ -1,5 +1,5 @@
 (ns ^:no-doc kithara.utils
-  (:require [flake.core :as flake]
+  (:require [flake.core :as flake :refer [flake->bigint]]
             [flake.utils :refer [base62-encode]]))
 
 ;; ## Flake
@@ -10,7 +10,7 @@
 (defn random-string
   []
   @__flake-init__
-  (base62-encode (flake/generate)))
+  (base62-encode (flake->bigint (flake/generate!))))
 
 ;; ## Stringify
 
