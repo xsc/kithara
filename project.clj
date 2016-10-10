@@ -1,4 +1,4 @@
-(defproject kithara "0.1.6-SNAPSHOT"
+(defproject kithara "0.1.6"
   :description "A Clojure Library for Reliable RabbitMQ Consumers."
   :url "https://github.com/xsc/kithara"
   :license {:name "MIT License"
