@@ -1,16 +1,8 @@
-(ns ^:no-doc kithara.utils
-  (:require [flake.core :as flake :refer [flake->bigint]]
-            [flake.utils :refer [base62-encode]]))
-
-;; ## Flake
-
-(defonce ^:private __flake-init__
-  (delay (flake/init!)))
+(ns ^:no-doc kithara.utils)
 
 (defn random-string
   []
-  @__flake-init__
-  (base62-encode (flake->bigint (flake/generate!))))
+  (str (java.util.UUID/randomUUID)))
 
 ;; ## Stringify
 
