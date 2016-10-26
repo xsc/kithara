@@ -20,13 +20,15 @@
              :silent-test {:resource-paths ["test-resources"]}
              :codox
              [:dev
-              {:plugins [[lein-codox "0.9.4"]]
+              {:plugins [[lein-codox "0.10.0"]]
+               :dependencies [[codox-theme-rdash "0.1.1"]]
                :codox {:project {:name "kithara"}
                        :metadata {:doc/format :markdown}
+                       :themes [:rdash]
                        :source-uri "https://github.com/xsc/kithara/blob/v{version}/{filepath}#L{line}"}}]
              :codox-consumers
              [:codox
-              {:codox {:output-path "doc"
+              {:codox {:output-path "target/doc"
                        :namespaces [kithara.core
                                     kithara.config
                                     kithara.protocols
@@ -34,7 +36,7 @@
                                     #"^kithara\.middlewares\.[a-z\-]+"]}}]
              :codox-rabbitmq
              [:codox
-              {:codox {:output-path "doc/rabbitmq"
+              {:codox {:output-path "target/doc/rabbitmq"
                        :namespaces [kithara.config
                                     #"kithara\.rabbitmq\.[a-z\-]+"]}}]}
   :aliases {"codox"
