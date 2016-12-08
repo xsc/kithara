@@ -155,7 +155,8 @@
 
 (defconfig connection :> net.jodah.lyra.ConnectionOptions
   {;; node info
-   :addresses      [withAddresses   :< (varargs java.lang.String)]
+   :addresses      [withAddresses   :< (varargs com.rabbitmq.client.Address)]
+   :address-str    [withAddresses   :< str]
    :host           [withHost        :< str]
    :hosts          [withHosts       :< (varargs java.lang.String)]
    :port           [withPort        :< int]
