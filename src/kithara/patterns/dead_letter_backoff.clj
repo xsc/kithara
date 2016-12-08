@@ -92,6 +92,7 @@
   [message]
   (or (some-> message
               (get-in [:properties :headers :x-kithara-retries])
+              (str)
               Long.)
       1))
 

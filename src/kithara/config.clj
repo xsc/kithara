@@ -3,10 +3,6 @@
   (:import [net.jodah.lyra.config
             RecoveryPolicies
             RetryPolicies]
-           [net.jodah.lyra.event
-            ConnectionListener
-            ChannelListener
-            ConsumerListener]
            [net.jodah.lyra.util Duration]))
 
 
@@ -21,9 +17,9 @@
       `(fn [~this ~param]
          (. ~this ~method-name
             ~@(for [processor processors]
-                (if (= processor ::none)
-                  param
-                  `(~processor ~param))))))
+                (cond (= processor ::none) param
+                      (sequential? processor) `(~@processor ~param)
+                      :else `(~processor ~param))))))
     (recur result-class [method])))
 
 (defn- run-builders
@@ -78,28 +74,36 @@
 ;; ## Converters
 
 (defn- to-int
-  ([value] (int value))
-  ([k default]
-   #(to-int (get % k default))))
+  (^long [value] (int value))
+  (^long [k default value]
+   (to-int (get value k default))))
 
 (defn- to-duration
-  ([value]
-   (if (instance? Duration value)
-     value
-     (Duration/milliseconds value)))
-  ([k default]
-   (fn [value]
-     (let [n (get value k default)]
-       (to-duration n)))))
+  (^Duration
+    [value]
+    (if (instance? Duration value)
+      value
+      (Duration/milliseconds value)))
+  (^Duration
+    [k default value]
+    (let [n (get value k default)]
+      (to-duration n))))
 
-(defn- varargs
-  [class]
-  #(into-array class %))
+(defmacro ^:private varargs
+  [fully-qualified-class value]
+  (with-meta
+    `(into-array ~fully-qualified-class ~value)
+    {:tag (str "[L" fully-qualified-class ";")}))
 
-(defn- with
-  [f mapping]
-  (fn [value]
-    (f (get mapping value value))))
+(defmacro ^:private with
+  [f mapping value]
+  `(~f (let [v# ~value] (get ~mapping v# v#))))
+
+(defmacro ^:private arg
+  [class value]
+  (with-meta
+    `(identity ~value)
+    {:tag class}))
 
 ;; ## RecoveryPolicy
 
@@ -143,17 +147,17 @@
    :queue-recovery?      [withQueueRecovery       :< boolean]
    :exchange-recovery?   [withExchangeRecovery    :< boolean]
    :consumer-recovery?   [withConsumerRecovery    :< boolean]
-   :connection-listeners [withConnectionListeners :< (varargs ConnectionListener)]
-   :channel-listeners    [withChannelListeners    :< (varargs ChannelListener)]
-   :consumer-listeners   [withConsumerListener    :< (varargs ConsumerListener)]})
+   :connection-listeners [withConnectionListeners :< (varargs net.jodah.lyra.event.ConnectionListener)]
+   :channel-listeners    [withChannelListeners    :< (varargs net.jodah.lyra.event.ChannelListener)]
+   :consumer-listeners   [withConsumerListeners   :< (varargs net.jodah.lyra.event.ConsumerListener)]})
 
 ;; ## Connection Options
 
 (defconfig connection :> net.jodah.lyra.ConnectionOptions
   {;; node info
-   :addresses      [withAddresses   :< (varargs String)]
+   :addresses      [withAddresses   :< (varargs java.lang.String)]
    :host           [withHost        :< str]
-   :hosts          [withHosts       :< (varargs String)]
+   :hosts          [withHosts       :< (varargs java.lang.String)]
    :port           [withPort        :< int]
    :username       [withUsername    :< str]
    :password       [withPassword    :< str]
@@ -161,7 +165,7 @@
 
    ;; SSL
    :ssl?           [withSsl]
-   :ssl-context    [withSslProtocol :< identity]
+   :ssl-context    [withSslProtocol :< (arg javax.net.ssl.SSLContext)]
    :ssl-protocol   [withSslProtocol :< str]
 
    ;; client info

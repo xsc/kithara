@@ -40,7 +40,9 @@
       opts)))
 
 (defn- queue-bind
-  [^Channel channel ok {:keys [^String exchange routing-keys arguments]}]
+  [^Channel channel
+   ^AMQP$Queue$DeclareOk ok
+   {:keys [^String exchange routing-keys arguments]}]
   {:pre [exchange
          (seq routing-keys)
          (every? string? routing-keys)]}
