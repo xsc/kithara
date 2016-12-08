@@ -35,7 +35,7 @@
     (message/build
       channel
       (.getEnvelope r)
-      (.getProperties r)
+      (.getProps r)
       (.getBody r)
       opts)))
 
