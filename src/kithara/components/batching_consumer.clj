@@ -176,8 +176,8 @@
                                 offer-timeout-ms
                                 opts]
   :this/as            *this*
-  :buffer             (ArrayList. batch-size)
-  :queue              (LinkedBlockingQueue. queue-size)
+  :buffer             (ArrayList. (long batch-size))
+  :queue              (LinkedBlockingQueue. (long queue-size))
   :scheduler          (start-scheduler *this*) #(stop-scheduler %)
   :component/consumer (make-consumer *this*)
 
